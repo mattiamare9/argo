@@ -13,7 +13,7 @@ Produzione su una VPS Ubuntu Server LTS con Docker Compose (ADR-011). Requisiti 
 | `api` | FastAPI | edge, backend |
 | `worker` | Job di provisioning; raggiunge i SaaS su Internet | edge, backend |
 | `migrate` | `alembic upgrade head` a ogni avvio, poi termina | backend |
-| `postgres` | `iam_db` | backend (interna) |
+| `postgres` | `iam_db`; API e worker usano il ruolo `argo_app`, le migrazioni il proprietario | backend (interna) |
 | `keycloak` | Identity provider (`start`, dietro proxy) | edge, backend, idp |
 | `keycloak-db` | `keycloak_db`, separato (specifica §3.5) | idp (interna) |
 
@@ -81,7 +81,6 @@ Il realm Keycloak si importa **solo al primo avvio**: le modifiche successive a
 ## Non ancora fatto (Fase 7)
 
 - Monitoraggio e alert esterni (es. uptime check su `/api/health`).
-- Ruolo DB separato non proprietario per l'app (vedi SECURITY.md).
 - Rate limiting su `/api/auth/*` e `/api/v1/sync/*`.
 - Prova del deploy su una VPS reale: il compose di produzione è validato
   (`docker compose config`) ma non ancora avviato con domini e certificati veri.

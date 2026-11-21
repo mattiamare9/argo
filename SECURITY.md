@@ -73,9 +73,10 @@ Modello di sicurezza e stato delle misure. Rischi e ragionamento: analisi §7.
   rimuove la credenziale dalla console Keycloak e rimanda l'email di registrazione
   (`bootstrap-admin` per gli admin). Nessun recupero self-service, per scelta.
 - **Keycloak in sviluppo su HTTP** (`start-dev`); in produzione HTTPS dietro Caddy (Fase 7).
-- **Append-only aggirabile dal proprietario della tabella**: oggi l'app si connette con
-  l'utente proprietario dello schema, che può disabilitare i trigger. In produzione
-  (Fase 7) l'app userà un ruolo DB separato senza privilegi su DDL e trigger.
+- **In sviluppo** l'app usa il proprietario dello schema (che potrebbe disattivare i
+  trigger dell'audit). **In produzione** API e worker usano `argo_app`: verificato che non
+  può aggiornare/cancellare l'audit, disattivarne i trigger o creare tabelle; solo le
+  migrazioni usano il proprietario.
 - `details` dell'audit non viene filtrato automaticamente: chi chiama `audit.record`
   non deve passare segreti.
 
