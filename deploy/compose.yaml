@@ -1,0 +1,38 @@
+# Profili: db (solo PostgreSQL), app (PostgreSQL + api). In arrivo: idp, test, prod.
+name: argo
+
+services:
+  postgres:
+    image: postgres:17.7-alpine
+    profiles: [db, app]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-argo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?imposta POSTGRES_PASSWORD in deploy/.env}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"  # solo localhost, mai pubblico
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\""]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # Backend in container. In sviluppo di solito si usa uvicorn sul host (DEVELOPMENT.md).
+  api:
+    build: ../backend
+    profiles: [app]
+    environment:
+      ARGO_ENVIRONMENT: ${ARGO_ENVIRONMENT:-development}
+      ARGO_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-argo}:${POSTGRES_PASSWORD}@postgres:5432/iam_db
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
