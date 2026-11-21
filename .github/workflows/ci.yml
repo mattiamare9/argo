@@ -1,0 +1,143 @@
+# Verifiche su ogni push e pull request. Gli stessi comandi girano in locale con `make ci`.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17.7-alpine
+        env:
+          POSTGRES_USER: argo
+          POSTGRES_PASSWORD: argo-ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U argo" --health-interval 5s
+          --health-timeout 3s --health-retries 10
+    env:
+      ARGO_DATABASE_URL: postgresql+asyncpg://argo:argo-ci@localhost:5432/iam_db
+      ARGO_TEST_DATABASE_URL: postgresql+asyncpg://argo:argo-ci@localhost:5432/iam_test
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v10.4.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - name: Database
+        run: |
+          PGPASSWORD=argo-ci psql -h localhost -U argo -c "CREATE DATABASE iam_db" \
+            -c "CREATE DATABASE iam_test"
+      - run: uv sync --frozen
+      - name: Lint e formattazione
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Migrazioni
+        run: |
+          test "$(uv run alembic heads | grep -c '(head)')" = 1 || { echo "::error::più di una head Alembic"; exit 1; }
+          uv run alembic upgrade head
+          uv run alembic check
+          uv run alembic downgrade base
+          uv run alembic upgrade head
+      - name: Test
+        run: uv run pytest -q
+
+  sync-agent:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: sync-agent
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v10.4.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: sync-agent/uv.lock
+      - run: uv sync --frozen
+      - run: uv run ruff check . && uv run ruff format --check .
+      - run: uv run pytest -q
+
+  frontend:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 22.23.5
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npx prettier --check "src/**/*.{ts,tsx}"
+      - run: npm run build
+
+  deploy-config:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Compose di sviluppo e produzione validi
+        working-directory: deploy
+        run: |
+          cp .env.example .env
+          docker compose -f compose.yaml --profile idp --profile app config --quiet
+          set -a; . ./.env.prod.example; set +a
+          for v in ARGO_DOMAIN ARGO_AUTH_DOMAIN ARGO_ACME_EMAIL POSTGRES_PASSWORD ARGO_APP_DB_PASSWORD \
+                   KEYCLOAK_DB_PASSWORD KC_ADMIN_PASSWORD ARGO_BACKEND_CLIENT_SECRET \
+                   ARGO_DASHBOARD_CLIENT_SECRET ARGO_SMTP_HOST; do
+            export "$v=${!v:-ci-placeholder}"
+          done
+          docker compose -f compose.prod.yaml config --quiet
+      - name: Script shell
+        run: shellcheck deploy/*.sh deploy/postgres/*.sh
+      - name: Realm Keycloak è JSON valido
+        run: python3 -m json.tool deploy/keycloak/argo-realm.json > /dev/null
+
+  security:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v10.4.0
+      - name: Segreti nel repository (gitleaks)
+        uses: gitleaks/gitleaks-action@v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Vulnerabilità note nelle dipendenze Python
+        run: |
+          for p in backend sync-agent; do
+            (cd "$p" && uv export --frozen --no-dev --no-hashes -o /tmp/req-$p.txt \
+              && uvx pip-audit@2.10.1 -r /tmp/req-$p.txt --no-deps --disable-pip --strict)
+          done
+      - name: Vulnerabilità note nelle dipendenze npm
+        working-directory: frontend
+        run: npm audit --omit=dev --audit-level=high
+      - name: Configurazione Docker e IaC (Trivy)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: config
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          exit-code: "1"

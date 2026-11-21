@@ -4,8 +4,10 @@
 # Esempio di restore test: suffisso "restore_test" → iam_db_restore_test, keycloak_db_restore_test.
 set -euo pipefail
 COMPOSE_FILE=${1:?compose file}; ENV_FILE=${2:?env file}; BACKUP=${3:?backup}; SUFFIX=${4:?suffisso}
-# shellcheck disable=SC1090
-set -a; . "$ENV_FILE"; set +a
+set -a
+# shellcheck source=/dev/null
+. "$ENV_FILE"
+set +a
 : "${ARGO_BACKUP_PASSPHRASE:?imposta ARGO_BACKUP_PASSPHRASE}"
 WORK=$(mktemp -d); trap 'rm -rf "$WORK"' EXIT
 dc() { docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" "$@"; }

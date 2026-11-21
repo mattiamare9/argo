@@ -23,6 +23,33 @@ Due nomi DNS puntano alla VPS:
 - `ARGO_AUTH_DOMAIN` (es. `accesso.azienda.it`): Keycloak. Le pagine `/admin` sono bloccate
   da Caddy; l'Admin API la usa solo il backend, sulla rete interna.
 
+## CI/CD (GitHub Actions)
+
+| Workflow | Quando | Cosa fa |
+|---|---|---|
+| `ci.yml` | ogni push e PR | backend (lint, migrazioni: una sola head, upgrade, `alembic check`, downgrade/upgrade, test su PostgreSQL), sync-agent, frontend (lint, prettier, build), compose e script (`shellcheck`), sicurezza (gitleaks, pip-audit, npm audit, Trivy config) |
+| `images.yml` | push su `main`, tag `v*` | immagini `argo-backend` e `argo-caddy` per **amd64 e arm64** (Oracle Ampere) su GHCR, tag = SHA del commit + `main` + versione; scansione Trivy delle immagini; poi deploy |
+| Dependabot | ogni lunedì | una PR raggruppata per Python, npm, Actions, Docker |
+
+`make ci` esegue in locale le stesse verifiche di `ci.yml`.
+
+**Deploy automatico** (spento finché la VPS non esiste): dopo il build, il job `deploy`
+entra in SSH sul server e lancia `deploy/deploy.sh <sha>`, che scarica le immagini del
+commit (nessuna build sul server), riavvia i servizi e aspetta che l'API sia in salute.
+Per attivarlo, in GitHub → Settings → Secrets and variables → Actions:
+
+- variabile `DEPLOY_ENABLED=true`;
+- segreti `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY` (chiave dedicata, solo deploy),
+  `DEPLOY_KNOWN_HOSTS` (output di `ssh-keyscan <host>`);
+- environment `production` (facoltativo: approvazione manuale prima di ogni deploy).
+
+Rollback: `deploy/deploy.sh <sha-precedente>` sul server, o rilanciare il workflow di un
+commit precedente. Le migrazioni non si annullano da sole: un rollback oltre una
+migrazione richiede `alembic downgrade` esplicito.
+
+**Cambio provider**: tutto è in immagini multi-arch su GHCR e in `deploy/`; su un'altra VPS
+bastano Docker, il clone del repository, `.env.prod` e il restore dell'ultimo backup.
+
 ## Primo deploy
 
 ```bash

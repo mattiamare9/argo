@@ -1,5 +1,8 @@
 # Argo IAM
 
+[![ci](https://github.com/mattiamare9/argo/actions/workflows/ci.yml/badge.svg)](https://github.com/mattiamare9/argo/actions/workflows/ci.yml)
+[![images](https://github.com/mattiamare9/argo/actions/workflows/images.yml/badge.svg)](https://github.com/mattiamare9/argo/actions/workflows/images.yml)
+
 Sistema di Identity and Access Management per una piccola azienda (10–30 dipendenti).
 Il titolare aggiorna un file Excel; il sistema rileva le variazioni ATTIVO/INATTIVO e
 crea, disabilita o riabilita automaticamente gli accessi.

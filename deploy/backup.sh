@@ -4,8 +4,10 @@
 # Il file prodotto va copiato FUORI dalla VPS (specifica §13.4).
 set -euo pipefail
 COMPOSE_FILE=${1:?compose file}; ENV_FILE=${2:?env file}; DEST=${3:?cartella}
-# shellcheck disable=SC1090
-set -a; . "$ENV_FILE"; set +a
+set -a
+# shellcheck source=/dev/null
+. "$ENV_FILE"
+set +a
 : "${ARGO_BACKUP_PASSPHRASE:?imposta ARGO_BACKUP_PASSPHRASE}"
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)
 OUT="$DEST/argo-$STAMP.tar.gz.enc"

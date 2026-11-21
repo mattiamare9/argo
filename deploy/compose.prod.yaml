@@ -1,5 +1,5 @@
-# Produzione (Fase 7). Uso, dalla cartella deploy/:
-#   docker compose -f compose.prod.yaml --env-file .env.prod up -d --build
+# Produzione (Fase 7). Di norma: deploy/deploy.sh <sha> (immagini da GHCR, nessuna build).
+# Senza CI: docker compose -f compose.prod.yaml --env-file .env.prod up -d --build
 # Pubbliche solo le porte 80/443 di Caddy. Database e Keycloak su reti interne.
 name: argo-prod
 
@@ -19,6 +19,7 @@ x-backend-env: &backend-env
 
 services:
   caddy:
+    image: ghcr.io/mattiamare9/argo-caddy:${ARGO_IMAGE_TAG:-main}
     build:
       context: ..
       dockerfile: deploy/caddy/Dockerfile
@@ -57,6 +58,7 @@ services:
 
   # Applica le migrazioni e termina; api e worker partono solo dopo.
   migrate:
+    image: ghcr.io/mattiamare9/argo-backend:${ARGO_IMAGE_TAG:-main}
     build: ../backend
     command: ["alembic", "upgrade", "head"]
     environment:
@@ -70,6 +72,7 @@ services:
     restart: "no"
 
   api:
+    image: ghcr.io/mattiamare9/argo-backend:${ARGO_IMAGE_TAG:-main}
     build: ../backend
     environment: *backend-env
     networks: [edge, backend]
@@ -79,6 +82,7 @@ services:
     restart: unless-stopped
 
   worker:
+    image: ghcr.io/mattiamare9/argo-backend:${ARGO_IMAGE_TAG:-main}
     build: ../backend
     command: ["python", "-m", "app.worker"]
     environment: *backend-env
