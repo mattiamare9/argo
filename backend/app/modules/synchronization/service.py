@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules import audit, employees
+from app.modules import audit, employees, provisioning
 from app.modules.employees import ChangeKind, EmployeeRecord, PlannedChange
 from app.modules.synchronization import repository
 from app.modules.synchronization.models import SyncAgent, SyncSnapshot
@@ -140,7 +140,8 @@ async def receive_snapshot(
 
     snapshot.status = "applied"
     await repository.add(db, snapshot)
-    await employees.apply_changes(db, plan, source=payload.source, actor=actor)
+    applied = await employees.apply_changes(db, plan, source=payload.source, actor=actor)
+    await provisioning.on_changes(db, applied, triggered_by=actor)
     await audit.record(
         db,
         actor=actor,
@@ -177,7 +178,10 @@ async def confirm(db: AsyncSession, snapshot_id: uuid.UUID, user: str) -> Snapsh
     else:
         plan = await employees.plan_changes(db, records)
         snapshot.summary = _summary(plan, await employees.count_missing(db, records))
-        await employees.apply_changes(db, plan, source=snapshot.source, actor=f"user:{user}")
+        applied = await employees.apply_changes(
+            db, plan, source=snapshot.source, actor=f"user:{user}"
+        )
+        await provisioning.on_changes(db, applied, triggered_by=f"user:{user}")
         snapshot.status = "applied"
     snapshot.decided_by, snapshot.decided_at = user, datetime.now(UTC)
     await audit.record(

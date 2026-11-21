@@ -22,3 +22,5 @@ def configure_logging(level: str) -> None:
     handler = logging.StreamHandler()
     handler.setFormatter(JsonFormatter())
     logging.basicConfig(level=level, handlers=[handler], force=True)
+    # Una riga per ogni richiesta HTTP verso Keycloak è rumore: restano gli errori.
+    logging.getLogger("httpx").setLevel(logging.WARNING)

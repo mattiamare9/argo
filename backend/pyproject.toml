@@ -33,6 +33,7 @@ extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S105", "S106"]  # assert e segreti finti nei test
+"migrations/versions/**" = ["E501"]  # generate da Alembic
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

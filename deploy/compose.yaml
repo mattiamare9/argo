@@ -74,5 +74,22 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # Esegue i job (provisioning). Stessa immagine dell'API, comando diverso (ADR-006).
+  worker:
+    build: ../backend
+    profiles: [app]
+    command: ["python", "-m", "app.worker"]
+    environment:
+      ARGO_ENVIRONMENT: ${ARGO_ENVIRONMENT:-development}
+      ARGO_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-argo}:${POSTGRES_PASSWORD}@postgres:5432/iam_db
+      ARGO_KEYCLOAK_URL: ${ARGO_KEYCLOAK_URL:-http://keycloak:8080}
+      ARGO_KEYCLOAK_BACKEND_CLIENT_SECRET: ${ARGO_BACKEND_CLIENT_SECRET:-}
+    healthcheck:
+      disable: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   postgres-data:

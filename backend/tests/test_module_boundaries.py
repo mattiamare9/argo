@@ -15,8 +15,10 @@ ALLOWED_DEPENDENCIES: dict[str, set[str]] = {
     "audit": set(),
     "employees": {"audit", "sessions"},
     "identity": set(),
+    "jobs": set(),
+    "provisioning": {"audit", "employees", "identity", "jobs", "sessions"},
     "sessions": {"audit"},
-    "synchronization": {"audit", "employees", "sessions"},
+    "synchronization": {"audit", "employees", "provisioning", "sessions"},
 }
 
 

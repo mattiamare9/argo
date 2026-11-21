@@ -40,6 +40,9 @@ class AppliedChange:
     kind: ChangeKind
     status: Status
     profile_changed: bool
+    email: str
+    first_name: str
+    last_name: str
 
 
 class EmployeeOut(BaseModel):

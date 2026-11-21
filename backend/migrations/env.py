@@ -8,6 +8,8 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 import app.modules.audit.models  # noqa: F401  registra le tabelle per autogenerate
 import app.modules.employees.models  # noqa: F401
+import app.modules.jobs.models  # noqa: F401
+import app.modules.provisioning.models  # noqa: F401
 import app.modules.sessions.models  # noqa: F401
 import app.modules.synchronization.models  # noqa: F401
 from app.core.config import get_settings

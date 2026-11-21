@@ -158,6 +158,11 @@ async def revoke_for_subject(db: AsyncSession, subject: str) -> int:
     return await repository.revoke_subject(db, subject, datetime.now(UTC))
 
 
+async def revoke_for_username(db: AsyncSession, username: str) -> int:
+    """Come revoke_for_subject, per username Keycloak (= employee_id, ADR-021)."""
+    return await repository.revoke_username(db, username.lower(), datetime.now(UTC))
+
+
 async def _audit_failure(db: AsyncSession, reason: str) -> None:
     await audit.record(
         db, actor="anonymous", action="auth.login", outcome="failure", details={"reason": reason}

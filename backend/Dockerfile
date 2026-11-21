@@ -1,4 +1,4 @@
-# Stessa immagine per api e worker (il worker arriva in Fase 3 con un comando diverso).
+# Stessa immagine per api e worker (deploy/compose.yaml: il worker usa `python -m app.worker`).
 FROM ghcr.io/astral-sh/uv:0.5.15 AS uv
 
 FROM python:3.12.12-slim AS build

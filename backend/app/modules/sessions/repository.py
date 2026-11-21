@@ -28,6 +28,15 @@ async def get_by_token_hash(session: AsyncSession, token_hash: str) -> UserSessi
     return await session.scalar(select(UserSession).where(UserSession.token_hash == token_hash))
 
 
+async def revoke_username(session: AsyncSession, username: str, now: datetime) -> int:
+    result = await session.execute(
+        update(UserSession)
+        .where(UserSession.username == username, UserSession.revoked_at.is_(None))
+        .values(revoked_at=now)
+    )
+    return result.rowcount
+
+
 async def revoke_subject(session: AsyncSession, subject: str, now: datetime) -> int:
     result = await session.execute(
         update(UserSession)

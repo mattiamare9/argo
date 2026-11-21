@@ -101,7 +101,15 @@ async def apply_changes(
             details={"status": record.status, "profile_changed": change.profile_changed},
         )
         applied.append(
-            AppliedChange(employee.employee_id, change.kind, record.status, change.profile_changed)
+            AppliedChange(
+                employee_id=employee.employee_id,
+                kind=change.kind,
+                status=record.status,
+                profile_changed=change.profile_changed,
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+            )
         )
     await session.flush()
     return applied
