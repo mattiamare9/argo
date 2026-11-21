@@ -29,6 +29,18 @@ Modello di sicurezza e stato delle misure. Rischi e ragionamento: analisi §7.
 | Service account con soli ruoli `manage-users`, `view-users`, `query-users`, `view-realm` | realm |
 | Protezione brute force di Keycloak attiva | realm |
 
+## In vigore (Fasi 2–3)
+
+| Misura | Dove |
+|---|---|
+| Agent autenticati con chiave API (in DB solo SHA-256), connessione solo in uscita | `synchronization` |
+| Un dipendente assente dal file non viene mai disattivato | `employees`, `synchronization` |
+| Disattivazioni ≥ soglia (default 3) in attesa di conferma, nessuna revoca prima | ADR-020 |
+| Snapshot non validi rifiutati per intero e registrati | `synchronization` |
+| Ogni tentativo di provisioning nell'audit; i passi riusciti non vengono annullati | `provisioning` |
+| Offboarding chiude anche le sessioni della dashboard di Argo | `dashboard.revoke_sessions` |
+| Dettagli tecnici degli errori visibili solo all'amministratore | frontend |
+
 ## Limiti noti
 
 - **Back-channel logout Keycloak → Argo non implementato** (ADR-022): un logout fatto
@@ -46,8 +58,9 @@ Modello di sicurezza e stato delle misure. Rischi e ragionamento: analisi §7.
 
 ## Pianificato
 
-- Fase 2: autenticazione dell'agent con chiave API (hash in DB, ruotabile), batch
-  idempotenti, conferma admin per disattivazioni di massa (ADR-020).
+- Revoca/rotazione della chiave agent dalla dashboard (oggi solo da DB).
+- Primo collegamento: il primo snapshot crea un account e manda un invito passkey a ogni
+  dipendente attivo. Decidere se serve una conferma anche per le creazioni di massa.
 - Fase 2+: segreti delle integrazioni cifrati in DB, chiave fuori dal DB.
 - Fase 7: HTTPS via Caddy, firewall, rate limiting, backup cifrati con restore test.
 

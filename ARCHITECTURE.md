@@ -50,6 +50,18 @@ Regole (ADR-001, ADR-017):
 | `audit` | Scrittura append-only (`record`). | – |
 | `identity` | Porta `IdentityProvider` + adapter Keycloak Admin API (ADR-021). | – |
 | `sessions` | Login BFF OIDC, sessioni, `current_user`, `require_role`, `require_csrf` (ADR-022). | `audit` |
+| `employees` | Anagrafica, pianificazione e applicazione delle transizioni. Non conosce fonti né IdP. | `audit`, `sessions` (router) |
+| `synchronization` | Agent con chiave API, snapshot idempotenti, conferma di massa (ADR-020, ADR-023, `docs/sync-api.md`). | `audit`, `employees`, `provisioning`, `sessions` |
+| `jobs` | Coda PostgreSQL generica: SKIP LOCKED, lease, backoff, idempotenza, `MANUAL_PENDING`. | – |
+| `provisioning` | Run di ciclo di vita, un job per passo, handler del worker, quadro accessi. | `audit`, `employees`, `identity`, `jobs`, `sessions` |
+
+Worker: `python -m app.worker`, stessa immagine dell'API. Esegue un job alla volta fuori
+transazione e ne registra l'esito; si ferma pulito con SIGTERM.
+
+Flusso offboarding: snapshot con `ACTIVE → INACTIVE` → `employees.apply_changes` →
+`provisioning.on_changes` crea run + job **nella stessa transazione** → il worker esegue
+`identity.disable`, `identity.logout`, `dashboard.revoke_sessions` → stato del run
+`completed` / `in_progress` / `partial`.
 
 Moduli pianificati e grafo delle dipendenze: analisi §4.
 
@@ -71,3 +83,8 @@ della dashboard in `frontend/.impeccable/surfaces/`.
 | Tabella | Note |
 |---|---|
 | `audit_events` | Append-only: trigger blocca UPDATE, DELETE, TRUNCATE |
+| `user_sessions`, `login_attempts` | Sessioni dashboard (solo hash del token) |
+| `employees` | Email univoca verificata a fine transazione (DEFERRABLE) |
+| `sync_agents`, `sync_snapshots` | Chiavi agent (hash), snapshot con esito |
+| `jobs` | Coda; indice parziale sui job eseguibili |
+| `lifecycle_runs` | Un'operazione di ciclo di vita; i passi sono job con `group_id` |

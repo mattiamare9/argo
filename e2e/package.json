@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "passkey": "mkdir -p out && node passkey.mjs"
+    "passkey": "mkdir -p out && node passkey.mjs",
+    "screens": "mkdir -p out && node screens.mjs"
   },
   "devDependencies": {
     "playwright-core": "1.58.2"

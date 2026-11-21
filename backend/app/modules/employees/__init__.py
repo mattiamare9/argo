@@ -9,6 +9,7 @@ from app.modules.employees.schemas import (
     PlannedChange,
 )
 from app.modules.employees.service import (
+    MAX_PAGE_SIZE,
     apply_changes,
     count_missing,
     find_email_conflicts,
@@ -18,6 +19,7 @@ from app.modules.employees.service import (
 )
 
 __all__ = [
+    "MAX_PAGE_SIZE",
     "AppliedChange",
     "ChangeKind",
     "EmployeeOut",

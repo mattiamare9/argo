@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules import jobs
+from app.modules import employees, jobs
 from app.modules.employees import AppliedChange, ChangeKind
 from app.modules.jobs import Job, JobStatus
 from app.modules.provisioning.models import LifecycleRun
@@ -144,3 +144,56 @@ async def list_runs(db: AsyncSession, *, only_open: bool, limit: int = 50) -> li
             )
         )
     return result
+
+
+KeyState = Literal["hung", "returned", "pending"]
+
+
+class KeyOut(BaseModel):
+    name: str
+    state: KeyState
+
+
+class PlateOut(BaseModel):
+    employee_id: str
+    first_name: str
+    last_name: str
+    status: Literal["ACTIVE", "INACTIVE"]
+    keys: list[KeyOut]
+
+
+def key_state(status: str, last_run: RunStatus | None) -> KeyState:
+    """Chiave appesa = accesso attivo; gancio vuoto = riconsegnato; ambra = non completato."""
+    if last_run in ("in_progress", "partial"):
+        return "pending"
+    if status == "INACTIVE":
+        return "returned"
+    # Attivo senza alcun run: l'account non è mai stato creato da Argo, va verificato.
+    return "hung" if last_run == "completed" else "pending"
+
+
+async def board(db: AsyncSession) -> list[PlateOut]:
+    """Il quadro accessi: una targhetta per dipendente, una chiave per accesso gestito.
+
+    Oggi l'unico accesso gestito è l'account aziendale (identity provider); app custom,
+    VPN e SaaS aggiungeranno chiavi (Fase 5).
+    """
+    # shortcut: una sola pagina (100 persone); paginare il quadro se l'azienda cresce oltre.
+    people = await employees.list_employees(db, page_size=employees.MAX_PAGE_SIZE)
+    latest: dict[str, RunStatus] = {}
+    for run in await list_runs(db, only_open=False, limit=1000):
+        latest.setdefault(run.employee_id, run.status)  # list_runs è dal più recente
+    return [
+        PlateOut(
+            employee_id=p.employee_id,
+            first_name=p.first_name,
+            last_name=p.last_name,
+            status=p.status,
+            keys=[
+                KeyOut(
+                    name="Account aziendale", state=key_state(p.status, latest.get(p.employee_id))
+                )
+            ],
+        )
+        for p in people.items
+    ]

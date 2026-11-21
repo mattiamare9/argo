@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
 from app.modules import audit, jobs
-from app.modules.provisioning.service import RunOut, list_runs
+from app.modules.provisioning.service import PlateOut, RunOut, board, list_runs
 from app.modules.sessions import CurrentUser, require_csrf, require_role
 
 router = APIRouter(prefix="/api/provisioning", tags=["provisioning"])
@@ -16,6 +16,11 @@ ADMIN = require_role("iam-admin")
 @router.get("/runs", dependencies=[Depends(DASHBOARD)])
 async def get_runs(only_open: bool = False, db: AsyncSession = Depends(get_db)) -> list[RunOut]:
     return await list_runs(db, only_open=only_open)
+
+
+@router.get("/board", dependencies=[Depends(DASHBOARD)])
+async def get_board(db: AsyncSession = Depends(get_db)) -> list[PlateOut]:
+    return await board(db)
 
 
 @router.post("/jobs/{job_id}/retry", dependencies=[Depends(require_csrf)])

@@ -56,6 +56,30 @@
         ],
         "createdAt": "2026-11-21T00:56:03.368Z",
         "reason": "agent: decision sketch from the closed direction round, not shipping UI; DESIGN.md was written after it"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "13px",
+        "createdAt": "2026-11-21T01:36:38.551Z",
+        "reason": "agent: 13px is the documented detail size for station and user labels (DESIGN.md type section)"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "0.8rem",
+        "files": [
+          "src/components/ui/button.tsx"
+        ],
+        "createdAt": "2026-11-21T01:36:38.566Z",
+        "reason": "agent: vendored shadcn component, small size variant kept as shipped"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "0.8rem",
+        "files": [
+          "src/components/ui/toggle.tsx"
+        ],
+        "createdAt": "2026-11-21T01:36:38.577Z",
+        "reason": "agent: vendored shadcn component, small size variant kept as shipped"
       }
     ]
   }

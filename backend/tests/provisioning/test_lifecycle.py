@@ -215,3 +215,38 @@ async def test_manual_step_resolution_requires_role(api, session, login_as) -> N
         f"/api/provisioning/jobs/{uuid.uuid4()}/retry", headers={"X-Argo-CSRF": "1"}
     )
     assert response.status_code == 403  # il retry è solo per l'amministratore
+
+
+async def test_board_shows_one_key_per_employee(api, session, login_as, handlers) -> None:
+    from app.modules import employees
+    from app.modules.employees import EmployeeRecord
+
+    records = [
+        EmployeeRecord(employee_id=e, email=f"{e}@x.it", first_name="N", last_name=e, status=s)
+        for e, s in [("A1", "ACTIVE"), ("A2", "ACTIVE"), ("I1", "INACTIVE")]
+    ]
+    applied = await employees.apply_changes(
+        session, await employees.plan_changes(session, records), source="t", actor="t"
+    )
+    await provisioning.on_changes(session, applied, triggered_by="t")
+    await drain(session, handlers)
+    # A2 riceve un offboarding che resta in corso: la chiave è in ambra.
+    await provisioning.on_changes(
+        session, [change("A2", ChangeKind.DEACTIVATED, "INACTIVE")], triggered_by="t"
+    )
+    await login_as(api, "iam-owner")
+    plates = {
+        p["employee_id"]: p["keys"][0]["state"]
+        for p in (await api.get("/api/provisioning/board")).json()
+    }
+    assert plates == {"A1": "hung", "A2": "pending", "I1": "returned"}
+
+
+def test_key_state_rules() -> None:
+    from app.modules.provisioning.service import key_state
+
+    assert key_state("ACTIVE", "completed") == "hung"
+    assert key_state("ACTIVE", None) == "pending"
+    assert key_state("INACTIVE", None) == "returned"
+    assert key_state("INACTIVE", "completed") == "returned"
+    assert key_state("INACTIVE", "partial") == "pending"

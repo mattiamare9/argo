@@ -10,21 +10,25 @@ crea, disabilita o riabilita automaticamente gli accessi.
 |---|---|---|
 | 0 | Fondamenta: backend, frontend, DB, audit, compose, docs | **Completata** |
 | 1 | Keycloak, login dashboard (BFF), passkey | **Completata** |
-| 2 | Dipendenti + Sync Agent | Da fare |
-| 3 | Worker, provisioning, offboarding | Da fare |
+| 2 | Dipendenti + Sync Agent | **Completata** |
+| 3 | Worker, provisioning, offboarding | **Completata** |
 | 4–7 | Dispositivi, app/VPN/SaaS, rifinitura, produzione | Da fare |
 
-**Oggi esiste:** login con passkey via Keycloak, sessioni server-side con ruoli, audit
-append-only, dashboard con stato del sistema, adapter Keycloak per il ciclo di vita utenti.
-**Non esiste ancora:** sincronizzazione Excel, provisioning, dispositivi. Nessuna funzione
-è simulata.
+**Oggi esiste, verificato dal vivo:** il titolare cambia una cella nell'Excel → il Sync Agent
+la legge → il backend calcola la transizione → il worker crea, disattiva o riattiva l'account
+Keycloak, chiude le sessioni e invia l'invito passkey. Disattivazioni di massa in attesa di
+conferma; offboarding parziali visibili e ritentati. Login alla dashboard con passkey.
+
+**Non esiste ancora:** app custom, VPN, SaaS (Fase 5), dispositivi e mTLS (Fase 4),
+deploy di produzione (Fase 7). Nessuna funzione è simulata.
 
 ## Repository
 
 ```text
 backend/     FastAPI (api e, da Fase 3, worker)
 frontend/    React + TypeScript + Vite (dashboard)
-sync-agent/  agent on-premise (da Fase 2)
+sync-agent/  agent on-premise che legge l'Excel (README dedicato)
+e2e/         test end-to-end con passkey virtuale e catture delle pagine
 deploy/      Docker Compose, configurazioni
 docs/        analisi architetturale e ADR
 ```

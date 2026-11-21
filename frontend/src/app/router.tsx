@@ -3,6 +3,9 @@ import { createBrowserRouter } from "react-router"
 import { AppLayout } from "@/components/layout/AppLayout"
 import { RequireAuth } from "@/features/auth/RequireAuth"
 import { DashboardPage } from "@/features/dashboard/DashboardPage"
+import { EmployeesPage } from "@/features/employees/EmployeesPage"
+import { OperationsPage } from "@/features/provisioning/OperationsPage"
+import { SyncPage } from "@/features/synchronization/SyncPage"
 
 export const router = createBrowserRouter([
   {
@@ -11,6 +14,11 @@ export const router = createBrowserRouter([
         <AppLayout />
       </RequireAuth>
     ),
-    children: [{ index: true, element: <DashboardPage /> }],
+    children: [
+      { index: true, element: <DashboardPage /> },
+      { path: "dipendenti", element: <EmployeesPage /> },
+      { path: "sincronizzazione", element: <SyncPage /> },
+      { path: "operazioni", element: <OperationsPage /> },
+    ],
   },
 ])

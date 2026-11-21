@@ -66,6 +66,24 @@ cd e2e && npm ci && npm run passkey   # richiede profilo idp, API e Vite attivi
 
 Ripete il percorso reale: link email → registrazione passkey → login → dashboard → esci.
 
+## Sincronizzazione e worker
+
+```bash
+cd backend
+uv run python -m app.cli create-agent --name excel-hr-dev    # stampa la chiave una volta
+uv run python -m app.worker                                  # esegue i job (provisioning)
+
+cd ../sync-agent                                             # vedi sync-agent/README.md
+export ARGO_AGENT_API_KEY=<chiave>
+uv run python -m argo_agent --config agent.toml --once
+```
+
+Catture di tutte le pagine autenticate (desktop e mobile) in `e2e/out/`:
+
+```bash
+cd e2e && npm run screens    # richiede un'email di invito recente in Mailpit (bootstrap-admin)
+```
+
 ## Test e qualità
 
 ```bash
