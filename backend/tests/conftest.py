@@ -14,11 +14,20 @@ class TestSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="ARGO_TEST_", env_file=".env", extra="ignore")
 
     database_url: str
+    keycloak_url: str | None = None  # se assente, i test marcati `keycloak` vengono saltati
 
 
 @pytest.fixture(scope="session")
 def test_database_url() -> str:
     return TestSettings().database_url
+
+
+@pytest.fixture(scope="session")
+def keycloak_url() -> str:
+    url = TestSettings().keycloak_url
+    if not url:
+        pytest.skip("ARGO_TEST_KEYCLOAK_URL non impostato: profilo idp non attivo")
+    return url
 
 
 @pytest.fixture(scope="session")

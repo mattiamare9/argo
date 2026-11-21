@@ -1,0 +1,149 @@
+{
+  "realm": "argo",
+  "displayName": "Argo",
+  "enabled": true,
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "it",
+    "en"
+  ],
+  "defaultLocale": "it",
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "bruteForceProtected": true,
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "roles": {
+    "realm": [
+      {
+        "name": "iam-admin",
+        "description": "Sviluppatore: setup e amministrazione completa di Argo"
+      },
+      {
+        "name": "iam-owner",
+        "description": "Titolare: consultazione stato e conferme"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "argo-dashboard",
+      "name": "Argo dashboard (BFF)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "${ARGO_DASHBOARD_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:5173/api/auth/callback",
+        "http://127.0.0.1:8000/api/auth/callback"
+      ],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:5173/*##http://127.0.0.1:8000/*"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "profile",
+        "email",
+        "roles",
+        "acr",
+        "web-origins"
+      ]
+    },
+    {
+      "clientId": "argo-backend",
+      "name": "Argo backend (service account)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "${ARGO_BACKEND_CLIENT_SECRET}",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "defaultClientScopes": [
+        "basic",
+        "kc-admin-api"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "service-account-argo-backend",
+      "enabled": true,
+      "serviceAccountClientId": "argo-backend",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "view-users",
+          "query-users",
+          "view-realm"
+        ]
+      }
+    }
+  ],
+  "smtpServer": {
+    "host": "mailpit",
+    "port": "1025",
+    "from": "argo@localhost",
+    "fromDisplayName": "Argo"
+  },
+  "browserFlow": "argo browser",
+  "webAuthnPolicyPasswordlessRpEntityName": "Argo",
+  "webAuthnPolicyPasswordlessUserVerificationRequirement": "required",
+  "webAuthnPolicyPasswordlessResidentKey": "required",
+  "authenticationFlows": [
+    {
+      "alias": "argo browser",
+      "description": "Accesso con passkey, senza password",
+      "providerId": "basic-flow",
+      "topLevel": true,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "auth-cookie",
+          "requirement": "ALTERNATIVE",
+          "priority": 10,
+          "authenticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "requirement": "ALTERNATIVE",
+          "priority": 20,
+          "authenticatorFlow": true,
+          "flowAlias": "argo passkey",
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "argo passkey",
+      "description": "Email, poi passkey",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "auth-username-form",
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "authenticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "webauthn-authenticator-passwordless",
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "authenticatorFlow": false,
+          "userSetupAllowed": false
+        }
+      ]
+    }
+  ]
+}
