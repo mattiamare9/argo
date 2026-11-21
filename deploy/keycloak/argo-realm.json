@@ -96,7 +96,12 @@
     "user": "${ARGO_SMTP_USER}",
     "password": "${ARGO_SMTP_PASSWORD}",
     "starttls": "${ARGO_SMTP_STARTTLS}",
-    "ssl": "false"
+    "ssl": "false",
+    "authType": "${ARGO_SMTP_AUTH_TYPE}",
+    "authTokenUrl": "${ARGO_SMTP_TOKEN_URL}",
+    "authTokenScope": "${ARGO_SMTP_TOKEN_SCOPE}",
+    "authTokenClientId": "${ARGO_SMTP_TOKEN_CLIENT_ID}",
+    "authTokenClientSecret": "${ARGO_SMTP_TOKEN_CLIENT_SECRET}"
   },
   "browserFlow": "argo browser",
   "webAuthnPolicyPasswordlessRpEntityName": "Argo",

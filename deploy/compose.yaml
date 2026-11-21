@@ -45,6 +45,11 @@ services:
       ARGO_SMTP_USER: ""
       ARGO_SMTP_PASSWORD: ""
       ARGO_SMTP_STARTTLS: "false"
+      ARGO_SMTP_AUTH_TYPE: basic
+      ARGO_SMTP_TOKEN_URL: ""
+      ARGO_SMTP_TOKEN_SCOPE: ""
+      ARGO_SMTP_TOKEN_CLIENT_ID: ""
+      ARGO_SMTP_TOKEN_CLIENT_SECRET: ""
       JAVA_OPTS_KC_HEAP: "-XX:MaxRAMPercentage=50 -Xms128m -Xmx512m"
     ports:
       - "127.0.0.1:8080:8080"

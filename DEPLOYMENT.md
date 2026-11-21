@@ -75,6 +75,38 @@ docker compose -f compose.prod.yaml --env-file .env.prod exec api \
 Poi installa il Sync Agent sul server aziendale (`sync-agent/README.md`) con
 `api_url = "https://<ARGO_DOMAIN>"`.
 
+## Email (inviti passkey)
+
+Mailpit serve solo in sviluppo: cattura le email e le mostra in una pagina, non le spedisce.
+In produzione Keycloak invia tramite un vero server SMTP.
+
+**Microsoft 365** (l'azienda usa Microsoft): Microsoft ha ritirato l'accesso SMTP con sola
+password, quindi si usa OAuth2. Keycloak 26.8.2 lo supporta (verificato nell'interfaccia di
+amministrazione: `authType` "token"). Passi, da fare con l'amministratore Microsoft:
+
+1. In Entra ID registra un'app (es. "Argo mail"), crea un client secret, concedi il
+   permesso applicativo `SMTP.SendAsApp` di Office 365 Exchange Online con consenso admin.
+2. In Exchange Online registra il service principal dell'app e dagli il permesso di
+   inviare come la casella mittente (es. `argo@azienda.it`). Richiede PowerShell
+   Exchange: da verificare insieme, i comandi esatti dipendono dal tenant.
+3. In `.env.prod`:
+
+```
+ARGO_SMTP_HOST=smtp.office365.com
+ARGO_SMTP_PORT=587
+ARGO_SMTP_STARTTLS=true
+ARGO_SMTP_AUTH=true
+ARGO_SMTP_USER=argo@azienda.it
+ARGO_SMTP_FROM=argo@azienda.it
+ARGO_SMTP_AUTH_TYPE=token
+ARGO_SMTP_TOKEN_URL=https://login.microsoftonline.com/<tenant-id>/oauth2/v2.0/token
+ARGO_SMTP_TOKEN_SCOPE=https://outlook.office365.com/.default
+ARGO_SMTP_TOKEN_CLIENT_ID=<application-id>
+ARGO_SMTP_TOKEN_CLIENT_SECRET=<client-secret>
+```
+
+Alternativa senza Microsoft: un servizio SMTP dedicato (utente/password, `ARGO_SMTP_AUTH_TYPE=basic`).
+
 ## Aggiornamento
 
 ```bash

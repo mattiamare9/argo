@@ -135,6 +135,11 @@ services:
       ARGO_SMTP_USER: ${ARGO_SMTP_USER:-}
       ARGO_SMTP_PASSWORD: ${ARGO_SMTP_PASSWORD:-}
       ARGO_SMTP_STARTTLS: ${ARGO_SMTP_STARTTLS:-true}
+      ARGO_SMTP_AUTH_TYPE: ${ARGO_SMTP_AUTH_TYPE:-basic}
+      ARGO_SMTP_TOKEN_URL: ${ARGO_SMTP_TOKEN_URL:-}
+      ARGO_SMTP_TOKEN_SCOPE: ${ARGO_SMTP_TOKEN_SCOPE:-}
+      ARGO_SMTP_TOKEN_CLIENT_ID: ${ARGO_SMTP_TOKEN_CLIENT_ID:-}
+      ARGO_SMTP_TOKEN_CLIENT_SECRET: ${ARGO_SMTP_TOKEN_CLIENT_SECRET:-}
     volumes:
       - ./keycloak/argo-realm.json:/opt/keycloak/data/import/argo-realm.json:ro
       - ./keycloak/themes/argo:/opt/keycloak/themes/argo:ro

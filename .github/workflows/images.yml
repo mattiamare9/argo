@@ -23,7 +23,7 @@ jobs:
       contents: read
       packages: write
     strategy:
-      fail-fast: true
+      fail-fast: false  # un'immagine con problemi non deve fermare l'altra
       matrix:
         include:
           - name: argo-backend

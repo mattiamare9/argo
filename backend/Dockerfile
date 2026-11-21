@@ -9,6 +9,9 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 
 FROM python:3.12.12-slim
+# Aggiornamenti di sicurezza dei pacchetti di sistema usciti dopo l'immagine base.
+RUN apt-get update && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
 RUN useradd --system --uid 10001 argo
 COPY --from=build /venv /venv
 WORKDIR /app
