@@ -1,12 +1,16 @@
 """Handler dei job di provisioning, eseguiti dal worker."""
 
 import logging
+import uuid
 from collections.abc import Awaitable, Callable
 from typing import Any
 
+import httpx
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from app.modules import audit, sessions
+from app.core.config import Settings
+from app.modules import applications, audit, sessions
+from app.modules.connectors import AppAccount, build_connector
 from app.modules.identity import IdentityProvider, IdentityUser, UserNotFound
 from app.modules.jobs import Handler
 
@@ -14,7 +18,10 @@ logger = logging.getLogger(__name__)
 
 
 def build_handlers(
-    identity: IdentityProvider, sessionmaker: async_sessionmaker[AsyncSession]
+    identity: IdentityProvider,
+    sessionmaker: async_sessionmaker[AsyncSession],
+    settings: Settings,
+    http: httpx.AsyncClient,
 ) -> dict[str, Handler]:
     def user_of(payload: dict[str, Any]) -> IdentityUser:
         return IdentityUser(
@@ -47,7 +54,29 @@ def build_handlers(
             await sessions.revoke_for_username(db, payload["employee_id"])
             await db.commit()
 
+    async def run_on_app(payload: dict[str, Any], action: str) -> None:
+        async with sessionmaker() as db:
+            app = await applications.get_application(db, uuid.UUID(payload["app_id"]))
+        if app is None or not app.enabled:
+            logger.info(
+                "applicazione %s eliminata o disabilitata: passo ignorato", payload["app_id"]
+            )
+            return
+        connector = build_connector(app, settings, http)
+        account = AppAccount(
+            *(payload[k] for k in ("employee_id", "email", "first_name", "last_name"))
+        )
+        await getattr(connector, action)(account)
+
+    async def app_provision(payload: dict[str, Any]) -> None:
+        await run_on_app(payload, "provision")
+
+    async def app_deprovision(payload: dict[str, Any]) -> None:
+        await run_on_app(payload, "deprovision")
+
     plain = {
+        "app.provision": app_provision,
+        "app.deprovision": app_deprovision,
         "identity.provision": provision,
         "identity.update_profile": update_profile,
         "identity.disable": disable,

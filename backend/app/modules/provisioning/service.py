@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules import employees, jobs
+from app.modules import applications, employees, jobs
 from app.modules.employees import AppliedChange, ChangeKind
 from app.modules.jobs import Job, JobStatus
 from app.modules.provisioning.models import LifecycleRun
@@ -21,6 +21,13 @@ STEPS: dict[RunKind, list[str]] = {
     "reactivation": ["identity.provision"],
     "profile_update": ["identity.update_profile"],
     "offboarding": ["identity.disable", "identity.logout", "dashboard.revoke_sessions"],
+}
+
+# Passi per ogni applicazione abilitata; il nome dell'app sta nell'etichetta del job.
+APP_STEPS: dict[RunKind, str] = {
+    "onboarding": "app.provision",
+    "reactivation": "app.provision",
+    "offboarding": "app.deprovision",
 }
 
 STEP_LABELS = {
@@ -49,6 +56,7 @@ async def on_changes(
 ) -> list[uuid.UUID]:
     """Crea i run e i loro job nella transazione del chiamante (nessun evento perso)."""
     run_ids = []
+    apps = await applications.list_enabled(db)
     for change in changes:
         kind = run_kind(change)
         if kind is None:
@@ -71,6 +79,16 @@ async def on_changes(
             await jobs.enqueue(
                 db, step, payload, idempotency_key=f"{run.id}:{step}", group_id=run.id
             )
+        # Gli aggiornamenti di anagrafica (profile_update) non toccano ancora le app.
+        app_kind = APP_STEPS.get(kind)
+        for app in apps if app_kind else []:
+            await jobs.enqueue(
+                db,
+                app_kind,
+                {**payload, "app_id": str(app.id), "label": f"Account {app.name}"},
+                idempotency_key=f"{run.id}:{app_kind}:{app.id}",
+                group_id=run.id,
+            )
         run_ids.append(run.id)
     return run_ids
 
@@ -84,6 +102,7 @@ class StepOut(BaseModel):
     last_error: str | None
     run_after: datetime
     resolved_by: str | None
+    app_id: str | None = None  # solo per i passi "app.*"
 
 
 class RunOut(BaseModel):
@@ -98,7 +117,10 @@ class RunOut(BaseModel):
 
 
 def run_status(steps: list[Job]) -> RunStatus:
-    statuses = {s.status for s in steps}
+    return _combine({s.status for s in steps})
+
+
+def _combine(statuses: set[str]) -> RunStatus:
     if statuses <= {JobStatus.SUCCESS}:
         return "completed"
     if statuses & {JobStatus.FAILED, JobStatus.MANUAL_PENDING}:
@@ -132,12 +154,13 @@ async def list_runs(db: AsyncSession, *, only_open: bool, limit: int = 50) -> li
                     StepOut(
                         job_id=s.id,
                         kind=s.kind,
-                        label=STEP_LABELS.get(s.kind, s.kind),
+                        label=s.payload.get("label") or STEP_LABELS.get(s.kind, s.kind),
                         status=s.status,
                         attempts=s.attempts,
                         last_error=s.last_error,
                         run_after=s.run_after,
                         resolved_by=s.resolved_by,
+                        app_id=s.payload.get("app_id"),
                     )
                     for s in steps
                 ],
@@ -172,17 +195,34 @@ def key_state(status: str, last_run: RunStatus | None) -> KeyState:
     return "hung" if last_run == "completed" else "pending"
 
 
+def app_key_state(status: str, last_run: RunStatus | None) -> KeyState:
+    """Come key_state, ma un attivo mai toccato da Argo su quest'app si presume con accesso.
+
+    Registrare un'app non deve colorare d'ambra tutto il quadro: Argo non ha creato quegli
+    account, ma l'assenza di operazioni non è un problema da segnalare.
+    """
+    if last_run is None and status == "ACTIVE":
+        return "hung"
+    return key_state(status, last_run)
+
+
 async def board(db: AsyncSession) -> list[PlateOut]:
     """Il quadro accessi: una targhetta per dipendente, una chiave per accesso gestito.
 
-    Oggi l'unico accesso gestito è l'account aziendale (identity provider); app custom,
-    VPN e SaaS aggiungeranno chiavi (Fase 5).
+    Le chiavi sono l'account aziendale (identity provider) e una per ogni applicazione abilitata.
     """
     # shortcut: una sola pagina (100 persone); paginare il quadro se l'azienda cresce oltre.
     people = await employees.list_employees(db, page_size=employees.MAX_PAGE_SIZE)
+    apps = await applications.list_enabled(db)
     latest: dict[str, RunStatus] = {}
-    for run in await list_runs(db, only_open=False, limit=1000):
-        latest.setdefault(run.employee_id, run.status)  # list_runs è dal più recente
+    latest_app: dict[tuple[str, str], RunStatus] = {}
+    for run in await list_runs(db, only_open=False, limit=1000):  # dal più recente
+        # La chiave aziendale dipende solo dai passi di identità, non da quelli delle app.
+        own = {s.status for s in run.steps if not s.app_id}
+        latest.setdefault(run.employee_id, _combine(own))
+        for step in run.steps:
+            if step.app_id:
+                latest_app.setdefault((run.employee_id, step.app_id), _combine({step.status}))
     return [
         PlateOut(
             employee_id=p.employee_id,
@@ -192,7 +232,14 @@ async def board(db: AsyncSession) -> list[PlateOut]:
             keys=[
                 KeyOut(
                     name="Account aziendale", state=key_state(p.status, latest.get(p.employee_id))
-                )
+                ),
+                *(
+                    KeyOut(
+                        name=app.name,
+                        state=app_key_state(p.status, latest_app.get((p.employee_id, str(app.id)))),
+                    )
+                    for app in apps
+                ),
             ],
         )
         for p in people.items

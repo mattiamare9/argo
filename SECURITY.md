@@ -41,6 +41,23 @@ Modello di sicurezza e stato delle misure. Rischi e ragionamento: analisi §7.
 | Offboarding chiude anche le sessioni della dashboard di Argo | `dashboard.revoke_sessions` |
 | Dettagli tecnici degli errori visibili solo all'amministratore | frontend |
 
+## In vigore (Fase 5)
+
+| Misura | Dove |
+|---|---|
+| Segreti delle applicazioni cifrati (Fernet), chiave solo in variabile d'ambiente, mai restituiti dall'API | `app/core/secrets.py`, `applications` |
+| Gestione applicazioni solo `iam-admin` con CSRF; ogni modifica nell'audit senza il segreto | `applications` |
+| Credenziali SCIM rifiutate (401/403) = errore definitivo, visibile in dashboard | `connectors/scim.py` |
+
+## In vigore (produzione, `deploy/compose.prod.yaml`)
+
+| Misura | Dove |
+|---|---|
+| Pubbliche solo 80/443 (Caddy, HTTPS automatico); database su reti interne | compose |
+| Console e Admin API di Keycloak non esposte (`/admin` → 404 su Caddy) | `Caddyfile` |
+| Header di sicurezza: HSTS, CSP restrittiva, `X-Frame-Options DENY`, `nosniff` | `Caddyfile` |
+| Backup cifrati AES-256 (PBKDF2), restore verificato in database separati | `backup.sh`, `restore.sh` |
+
 ## Limiti noti
 
 - **Back-channel logout Keycloak → Argo non implementato** (ADR-022): un logout fatto

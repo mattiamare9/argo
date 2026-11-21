@@ -1,7 +1,9 @@
 from datetime import UTC, datetime, timedelta
 
+import httpx
 import pytest
 
+from app.core.config import Settings
 from app.modules import jobs, provisioning
 from app.modules.employees import AppliedChange, ChangeKind
 from app.modules.identity import IdentityError, IdentityUser, UserNotFound
@@ -64,7 +66,9 @@ def identity() -> FakeIdentity:
 
 @pytest.fixture
 def handlers(identity, session):
-    return provisioning.build_handlers(identity, SameSession(session))
+    return provisioning.build_handlers(
+        identity, SameSession(session), Settings(database_url="x"), httpx.AsyncClient()
+    )
 
 
 def change(eid: str, kind: ChangeKind, status: str = "ACTIVE") -> AppliedChange:
@@ -250,3 +254,11 @@ def test_key_state_rules() -> None:
     assert key_state("INACTIVE", None) == "returned"
     assert key_state("INACTIVE", "completed") == "returned"
     assert key_state("INACTIVE", "partial") == "pending"
+
+
+def test_app_key_of_untouched_active_employee_is_hung() -> None:
+    from app.modules.provisioning.service import app_key_state
+
+    assert app_key_state("ACTIVE", None) == "hung"
+    assert app_key_state("INACTIVE", None) == "returned"
+    assert app_key_state("INACTIVE", "partial") == "pending"

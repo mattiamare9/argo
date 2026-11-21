@@ -1,0 +1,37 @@
+# Unico punto di ingresso pubblico (ADR-012). HTTPS automatico con Let's Encrypt.
+{
+	email {$ARGO_ACME_EMAIL}
+}
+
+{$ARGO_DOMAIN} {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+		-Server
+	}
+
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+
+	# Dashboard: file statici compilati, fallback a index.html per le route del client.
+	handle {
+		root * /srv/frontend
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+{$ARGO_AUTH_DOMAIN} {
+	encode zstd gzip
+	header -Server
+	# La console e l'Admin API di Keycloak non sono esposte su Internet:
+	# il backend li raggiunge sulla rete interna (http://keycloak:8080).
+	@admin path /admin /admin/*
+	respond @admin 404
+	reverse_proxy keycloak:8080
+}

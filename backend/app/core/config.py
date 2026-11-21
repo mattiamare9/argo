@@ -19,6 +19,9 @@ class Settings(BaseSettings):
 
     # "localhost", non 127.0.0.1: WebAuthn non accetta indirizzi IP come RP ID.
     keycloak_url: str = "http://localhost:8080"
+    # In produzione il browser raggiunge Keycloak su un URL pubblico diverso da quello interno
+    # (deploy/compose.prod.yaml): issuer e redirect usano quello pubblico.
+    keycloak_public_url: str | None = None
     keycloak_realm: str = "argo"
     # Service account per l'Admin API (modulo identity).
     keycloak_backend_client_id: str = "argo-backend"
@@ -27,12 +30,15 @@ class Settings(BaseSettings):
     oidc_client_id: str = "argo-dashboard"
     oidc_client_secret: SecretStr | None = None
 
+    # Chiave Fernet (base64 di 32 byte) che cifra i segreti delle applicazioni.
+    secrets_key: SecretStr | None = None
+
     # Uno snapshot con almeno questo numero di disattivazioni attende conferma (ADR-020).
     mass_deactivation_threshold: int = 3
 
     @property
     def oidc_issuer(self) -> str:
-        return f"{self.keycloak_url}/realms/{self.keycloak_realm}"
+        return f"{self.keycloak_public_url or self.keycloak_url}/realms/{self.keycloak_realm}"
 
 
 @lru_cache

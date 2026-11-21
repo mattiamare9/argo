@@ -40,13 +40,12 @@
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
       "redirectUris": [
-        "http://localhost:5173/api/auth/callback",
-        "http://127.0.0.1:8000/api/auth/callback"
+        "${ARGO_PUBLIC_URL}/api/auth/callback"
       ],
       "webOrigins": [],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "http://localhost:5173/*##http://127.0.0.1:8000/*"
+        "post.logout.redirect.uris": "${ARGO_PUBLIC_URL}/*"
       },
       "defaultClientScopes": [
         "basic",
@@ -89,10 +88,15 @@
     }
   ],
   "smtpServer": {
-    "host": "mailpit",
-    "port": "1025",
-    "from": "argo@localhost",
-    "fromDisplayName": "Argo"
+    "host": "${ARGO_SMTP_HOST}",
+    "port": "${ARGO_SMTP_PORT}",
+    "from": "${ARGO_SMTP_FROM}",
+    "fromDisplayName": "Argo",
+    "auth": "${ARGO_SMTP_AUTH}",
+    "user": "${ARGO_SMTP_USER}",
+    "password": "${ARGO_SMTP_PASSWORD}",
+    "starttls": "${ARGO_SMTP_STARTTLS}",
+    "ssl": "false"
   },
   "browserFlow": "argo browser",
   "webAuthnPolicyPasswordlessRpEntityName": "Argo",

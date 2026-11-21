@@ -56,7 +56,16 @@ async def api(session: AsyncSession, migrated_database: str):
     from app.db.session import get_db
     from app.main import create_app
 
-    app = create_app(Settings(database_url=migrated_database, mass_deactivation_threshold=3))
+    # Nessun segreto da .env: i test non devono dipendere dalla configurazione locale.
+    app = create_app(
+        Settings(
+            database_url=migrated_database,
+            mass_deactivation_threshold=3,
+            secrets_key=None,
+            oidc_client_secret=None,
+            keycloak_backend_client_secret=None,
+        )
+    )
     app.dependency_overrides[get_db] = lambda: session
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:

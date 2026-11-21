@@ -62,6 +62,7 @@ try {
     ["dipendenti", "/dipendenti"],
     ["sincronizzazione", "/sincronizzazione"],
     ["operazioni", "/operazioni"],
+    ["applicazioni", "/applicazioni"],
   ]) {
     for (const [width, height] of [
       [1440, 900],

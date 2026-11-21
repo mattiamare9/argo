@@ -208,3 +208,16 @@ async def test_revoke_for_subject_ends_all_sessions(client, idp, session) -> Non
     await log_in(client, idp)
     assert await revoke_for_subject(session, "kc-sub-1") == 1
     assert (await client.get("/api/auth/me")).status_code == 401
+
+
+def test_issuer_uses_public_keycloak_url_when_set() -> None:
+    internal = Settings(
+        database_url="postgresql+asyncpg://x/y", keycloak_url="http://keycloak:8080"
+    )
+    assert internal.oidc_issuer == "http://keycloak:8080/realms/argo"
+    public = Settings(
+        database_url="postgresql+asyncpg://x/y",
+        keycloak_url="http://keycloak:8080",
+        keycloak_public_url="https://accesso.azienda.it",
+    )
+    assert public.oidc_issuer == "https://accesso.azienda.it/realms/argo"

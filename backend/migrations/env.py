@@ -6,6 +6,7 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
+import app.modules.applications.models  # noqa: F401
 import app.modules.audit.models  # noqa: F401  registra le tabelle per autogenerate
 import app.modules.employees.models  # noqa: F401
 import app.modules.jobs.models  # noqa: F401

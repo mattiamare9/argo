@@ -12,15 +12,19 @@ crea, disabilita o riabilita automaticamente gli accessi.
 | 1 | Keycloak, login dashboard (BFF), passkey | **Completata** |
 | 2 | Dipendenti + Sync Agent | **Completata** |
 | 3 | Worker, provisioning, offboarding | **Completata** |
-| 4–7 | Dispositivi, app/VPN/SaaS, rifinitura, produzione | Da fare |
+| 4 | Dispositivi, mTLS, step-ca | Rimandata (decisioni aperte) |
+| 5 | Applicazioni: registro + connettori manuale e SCIM 2.0 | **Parziale**: VPN e app custom in attesa |
+| 7 | Produzione: compose, Caddy, backup/restore | **Parziale**: non ancora provato su VPS |
 
 **Oggi esiste, verificato dal vivo:** il titolare cambia una cella nell'Excel → il Sync Agent
 la legge → il backend calcola la transizione → il worker crea, disattiva o riattiva l'account
 Keycloak, chiude le sessioni e invia l'invito passkey. Disattivazioni di massa in attesa di
 conferma; offboarding parziali visibili e ritentati. Login alla dashboard con passkey.
 
-**Non esiste ancora:** app custom, VPN, SaaS (Fase 5), dispositivi e mTLS (Fase 4),
-deploy di produzione (Fase 7). Nessuna funzione è simulata.
+**Non esiste ancora:** back-channel logout delle app custom, VPN (Fase 5), dispositivi e
+mTLS (Fase 4), monitoraggio. Nessuna funzione è simulata.
+
+Decisioni prese in autonomia e domande aperte: [docs/DECISIONI_AUTONOME.md](docs/DECISIONI_AUTONOME.md).
 
 ## Repository
 

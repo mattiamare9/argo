@@ -22,7 +22,9 @@ async def run(stop: asyncio.Event) -> None:
     engine = create_engine(settings.database_url)
     maker = async_sessionmaker(engine, expire_on_commit=False)
     async with httpx.AsyncClient(timeout=15) as http:
-        handlers = provisioning.build_handlers(build_identity_provider(settings, http), maker)
+        handlers = provisioning.build_handlers(
+            build_identity_provider(settings, http), maker, settings, http
+        )
         logger.info("worker avviato: %d tipi di job", len(handlers))
         while not stop.is_set():
             try:

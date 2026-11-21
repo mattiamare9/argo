@@ -53,7 +53,9 @@ Regole (ADR-001, ADR-017):
 | `employees` | Anagrafica, pianificazione e applicazione delle transizioni. Non conosce fonti né IdP. | `audit`, `sessions` (router) |
 | `synchronization` | Agent con chiave API, snapshot idempotenti, conferma di massa (ADR-020, ADR-023, `docs/sync-api.md`). | `audit`, `employees`, `provisioning`, `sessions` |
 | `jobs` | Coda PostgreSQL generica: SKIP LOCKED, lease, backoff, idempotenza, `MANUAL_PENDING`. | – |
-| `provisioning` | Run di ciclo di vita, un job per passo, handler del worker, quadro accessi. | `audit`, `employees`, `identity`, `jobs`, `sessions` |
+| `provisioning` | Run di ciclo di vita, un job per passo, handler del worker, quadro accessi. | `applications`, `audit`, `connectors`, `employees`, `identity`, `jobs`, `sessions` |
+| `applications` | Registro delle app gestite; segreti cifrati (Fernet, `ARGO_SECRETS_KEY`). | `audit`, `sessions` |
+| `connectors` | Porta `AppConnector` + adapter `ManualConnector` e `ScimConnector` (SCIM 2.0). | `jobs` |
 
 Worker: `python -m app.worker`, stessa immagine dell'API. Esegue un job alla volta fuori
 transazione e ne registra l'esito; si ferma pulito con SIGTERM.

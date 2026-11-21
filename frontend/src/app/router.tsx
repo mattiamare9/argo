@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router"
 
 import { AppLayout } from "@/components/layout/AppLayout"
+import { ApplicationsPage } from "@/features/applications/ApplicationsPage"
 import { RequireAuth } from "@/features/auth/RequireAuth"
 import { DashboardPage } from "@/features/dashboard/DashboardPage"
 import { EmployeesPage } from "@/features/employees/EmployeesPage"
@@ -19,6 +20,7 @@ export const router = createBrowserRouter([
       { path: "dipendenti", element: <EmployeesPage /> },
       { path: "sincronizzazione", element: <SyncPage /> },
       { path: "operazioni", element: <OperationsPage /> },
+      { path: "applicazioni", element: <ApplicationsPage /> },
     ],
   },
 ])

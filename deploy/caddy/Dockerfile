@@ -1,0 +1,12 @@
+# Caddy con la build della dashboard inclusa (ADR-018: nessun container frontend separato).
+# Contesto di build: la radice del repository.
+FROM node:22.23.5-alpine AS build
+WORKDIR /src
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
+
+FROM caddy:2.11.9-alpine
+COPY deploy/caddy/Caddyfile /etc/caddy/Caddyfile
+COPY --from=build /src/dist /srv/frontend

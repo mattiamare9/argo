@@ -12,11 +12,21 @@ from pathlib import Path
 MODULES_DIR = Path(__file__).resolve().parent.parent / "app" / "modules"
 
 ALLOWED_DEPENDENCIES: dict[str, set[str]] = {
+    "applications": {"audit", "sessions"},
     "audit": set(),
+    "connectors": {"jobs"},
     "employees": {"audit", "sessions"},
     "identity": set(),
     "jobs": set(),
-    "provisioning": {"audit", "employees", "identity", "jobs", "sessions"},
+    "provisioning": {
+        "applications",
+        "audit",
+        "connectors",
+        "employees",
+        "identity",
+        "jobs",
+        "sessions",
+    },
     "sessions": {"audit"},
     "synchronization": {"audit", "employees", "provisioning", "sessions"},
 }
