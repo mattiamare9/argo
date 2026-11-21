@@ -27,8 +27,12 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "S", "ASYNC"]
 
+[tool.ruff.lint.flake8-bugbear]
+# Pattern standard di FastAPI per le dipendenze.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
+
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101"]  # assert nei test
+"tests/**" = ["S101", "S105", "S106"]  # assert e segreti finti nei test
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

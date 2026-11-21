@@ -9,14 +9,14 @@ crea, disabilita o riabilita automaticamente gli accessi.
 | Fase | Contenuto | Stato |
 |---|---|---|
 | 0 | Fondamenta: backend, frontend, DB, audit, compose, docs | **Completata** |
-| 1 | Keycloak, login dashboard (BFF), passkey | Da fare |
+| 1 | Keycloak, login dashboard (BFF), passkey | **Completata** |
 | 2 | Dipendenti + Sync Agent | Da fare |
 | 3 | Worker, provisioning, offboarding | Da fare |
 | 4–7 | Dispositivi, app/VPN/SaaS, rifinitura, produzione | Da fare |
 
-**Oggi esiste:** API FastAPI con `/api/health`, audit log append-only, migrazioni Alembic,
-shell della dashboard che mostra lo stato del sistema.
-**Non esiste ancora:** autenticazione, sincronizzazione, provisioning. Nessuna funzione
+**Oggi esiste:** login con passkey via Keycloak, sessioni server-side con ruoli, audit
+append-only, dashboard con stato del sistema, adapter Keycloak per il ciclo di vita utenti.
+**Non esiste ancora:** sincronizzazione Excel, provisioning, dispositivi. Nessuna funzione
 è simulata.
 
 ## Repository

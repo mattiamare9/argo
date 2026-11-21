@@ -22,5 +22,7 @@
 | [ADR-018](018-risparmio-risorse-un-postgresql-in.md) | Risparmio risorse: un PostgreSQL in sviluppo, Caddy serve il frontend | Accettato |
 | [ADR-019](019-api-di-sincronizzazione-indipendente-dalla.md) | API di sincronizzazione indipendente dalla fonte | Accettato |
 | [ADR-020](020-disattivazioni-di-massa-con-conferma.md) | Disattivazioni di massa con conferma admin | Accettato |
+| [ADR-021](021-username-keycloak-uguale-a-employee-id.md) | Username Keycloak uguale a employee_id | Accettato |
+| [ADR-022](022-bff-oidc-senza-libreria.md) | Login BFF senza libreria OIDC | Accettato |
 
 Nuova decisione → nuovo file numerato. Decisione cambiata → stato `Sostituito da ADR-NNN`.

@@ -1,6 +1,7 @@
 import { LayoutGridIcon } from "lucide-react"
 import { NavLink, Outlet } from "react-router"
 
+import { UserMenu } from "@/features/auth/UserMenu"
 import { cn } from "@/lib/utils"
 
 // Le voci si aggiungono quando la feature corrispondente esiste davvero.
@@ -38,6 +39,7 @@ export function AppLayout() {
             </NavLink>
           ))}
         </nav>
+        <UserMenu />
       </aside>
       <main className="min-w-0 flex-1">
         <Outlet />

@@ -47,7 +47,9 @@ Regole (ADR-001, ADR-017):
 
 | Modulo | Stato | Dipende da |
 |---|---|---|
-| `audit` | Scrittura append-only (`record`). Lettura via API in Fase 1 con l'autenticazione. | – |
+| `audit` | Scrittura append-only (`record`). | – |
+| `identity` | Porta `IdentityProvider` + adapter Keycloak Admin API (ADR-021). | – |
+| `sessions` | Login BFF OIDC, sessioni, `current_user`, `require_role`, `require_csrf` (ADR-022). | `audit` |
 
 Moduli pianificati e grafo delle dipendenze: analisi §4.
 

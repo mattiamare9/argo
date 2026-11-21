@@ -37,15 +37,41 @@ Profili Compose:
 |---|---|---|
 | `db` | postgres | ~40 MB |
 | `app` | postgres + api in container | ~100 MB |
+| `idp` | postgres + Keycloak + Mailpit | ~500 MB |
 
 Per provare l'immagine del backend: `docker compose -f deploy/compose.yaml --profile app up -d --build`
 (le migrazioni vanno applicate prima con `uv run alembic upgrade head` dal host).
+
+## Login e Keycloak (profilo `idp`)
+
+```bash
+docker compose -f deploy/compose.yaml --profile idp up -d --wait   # ~1 minuto al primo avvio
+cd backend
+uv run python -m app.cli bootstrap-admin --employee-id DEVADMIN \
+  --email tu@example.com --first-name Nome --last-name Cognome
+```
+
+- L'email per registrare la passkey arriva in Mailpit: http://127.0.0.1:8025
+- Apri il link, registra la passkey, poi vai su http://localhost:5173 e accedi con l'email.
+- Usa sempre `localhost`, non `127.0.0.1`: WebAuthn non accetta indirizzi IP.
+- Console Keycloak: http://localhost:8080 (utente e password di `deploy/.env`).
+- Il realm è in `deploy/keycloak/argo-realm.json` e si importa solo se non esiste. Per
+  reimportarlo dopo una modifica: elimina il realm dalla console e riavvia il container.
+
+Test end-to-end con passkey (autenticatore WebAuthn virtuale di Chromium):
+
+```bash
+cd e2e && npm ci && npm run passkey   # richiede profilo idp, API e Vite attivi
+```
+
+Ripete il percorso reale: link email → registrazione passkey → login → dashboard → esci.
 
 ## Test e qualità
 
 ```bash
 cd backend
-uv run pytest            # richiede il profilo db attivo; usa il database iam_test
+uv run pytest            # richiede il profilo db; i test Keycloak girano se
+                         # ARGO_TEST_KEYCLOAK_URL è impostato (profilo idp)
 uv run ruff check . && uv run ruff format --check .
 uv run alembic check     # modelli e migrazioni allineati
 

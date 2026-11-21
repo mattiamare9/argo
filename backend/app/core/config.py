@@ -17,7 +17,8 @@ class Settings(BaseSettings):
     # URL pubblico da cui il browser raggiunge la dashboard (redirect OIDC, cookie).
     public_url: str = "http://localhost:5173"
 
-    keycloak_url: str = "http://127.0.0.1:8080"
+    # "localhost", non 127.0.0.1: WebAuthn non accetta indirizzi IP come RP ID.
+    keycloak_url: str = "http://localhost:8080"
     keycloak_realm: str = "argo"
     # Service account per l'Admin API (modulo identity).
     keycloak_backend_client_id: str = "argo-backend"

@@ -1,0 +1,11 @@
+{
+  "name": "argo-e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "passkey": "mkdir -p out && node passkey.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "1.58.2"
+  }
+}

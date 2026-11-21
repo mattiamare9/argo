@@ -14,10 +14,30 @@ Modello di sicurezza e stato delle misure. Rischi e ragionamento: analisi §7.
 | Audit scritto nella stessa transazione dell'operazione | `modules/audit/service.py` |
 | Lint di sicurezza (Ruff, regole `S` / bandit) | `backend/pyproject.toml` |
 
+## In vigore (Fase 1)
+
+| Misura | Dove |
+|---|---|
+| Login con passkey (WebAuthn, verifica utente obbligatoria), nessuna password | realm `argo`, flusso `argo browser` |
+| Authorization Code Flow + PKCE S256, client confidenziale | `modules/sessions/oidc.py` |
+| Sessioni server-side: cookie opaco `HttpOnly; SameSite=Lax` (`Secure` in produzione), in DB solo l'hash | `modules/sessions` |
+| Scadenza per inattività 30 min, assoluta 10 h, revoca per utente | `sessions/service.py` |
+| `state` legato al browser con cookie dedicato, `nonce` verificato, open redirect bloccato | `sessions/service.py` |
+| CSRF: header `X-Argo-CSRF` obbligatorio sulle richieste mutanti, nessun CORS | `sessions/dependencies.py` |
+| Ruoli `iam-admin` / `iam-owner`; utenti senza ruolo: 403 | `require_role` |
+| Login riusciti, falliti e logout nell'audit | `sessions/service.py` |
+| Service account con soli ruoli `manage-users`, `view-users`, `query-users`, `view-realm` | realm |
+| Protezione brute force di Keycloak attiva | realm |
+
 ## Limiti noti
 
-- **Nessuna autenticazione sulle API**: arriva in Fase 1. Fino ad allora l'API espone
-  solo `/api/health` e non va esposta in rete.
+- **Back-channel logout Keycloak → Argo non implementato** (ADR-022): un logout fatto
+  direttamente su Keycloak non chiude la sessione della dashboard; la chiude l'offboarding
+  o la scadenza per inattività (30 min).
+- **Recupero account**: se un utente perde l'unico dispositivo con la passkey, un admin
+  rimuove la credenziale dalla console Keycloak e rimanda l'email di registrazione
+  (`bootstrap-admin` per gli admin). Nessun recupero self-service, per scelta.
+- **Keycloak in sviluppo su HTTP** (`start-dev`); in produzione HTTPS dietro Caddy (Fase 7).
 - **Append-only aggirabile dal proprietario della tabella**: oggi l'app si connette con
   l'utente proprietario dello schema, che può disabilitare i trigger. In produzione
   (Fase 7) l'app userà un ruolo DB separato senza privilegi su DDL e trigger.
@@ -26,8 +46,6 @@ Modello di sicurezza e stato delle misure. Rischi e ragionamento: analisi §7.
 
 ## Pianificato
 
-- Fase 1: login dashboard via Keycloak (BFF, cookie `HttpOnly; Secure; SameSite`, CSRF),
-  ruoli `iam-admin` / `iam-owner`, passkey.
 - Fase 2: autenticazione dell'agent con chiave API (hash in DB, ruotabile), batch
   idempotenti, conferma admin per disattivazioni di massa (ADR-020).
 - Fase 2+: segreti delle integrazioni cifrati in DB, chiave fuori dal DB.
