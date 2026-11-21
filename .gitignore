@@ -11,3 +11,5 @@ dist/
 # strumenti locali
 graft/
 .ignore
+frontend/.impeccable/review/
+frontend/.impeccable/build/

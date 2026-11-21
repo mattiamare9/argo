@@ -1,0 +1,62 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "files": [
+          ".impeccable/mocks/decision/canon.html"
+        ],
+        "createdAt": "2026-11-21T00:38:07.452Z",
+        "reason": "agent: canon card must render the category standard, Inter is the category default by design"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/challenger-transit.html"
+        ],
+        "createdAt": "2026-11-21T00:38:07.462Z",
+        "reason": "agent: decision sketch, map children are absolutely positioned labels inside a padded diagram, false positive"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/assigned.html"
+        ],
+        "createdAt": "2026-11-21T00:56:03.329Z",
+        "reason": "agent: decision sketch from the closed direction round, not shipping UI; DESIGN.md was written after it"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/model-pick.html"
+        ],
+        "createdAt": "2026-11-21T00:56:03.343Z",
+        "reason": "agent: decision sketch from the closed direction round, not shipping UI; DESIGN.md was written after it"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/challenger-transit.html"
+        ],
+        "createdAt": "2026-11-21T00:56:03.355Z",
+        "reason": "agent: decision sketch from the closed direction round, not shipping UI; DESIGN.md was written after it"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/canon.html"
+        ],
+        "createdAt": "2026-11-21T00:56:03.368Z",
+        "reason": "agent: decision sketch from the closed direction round, not shipping UI; DESIGN.md was written after it"
+      }
+    ]
+  }
+}

@@ -31,6 +31,7 @@ Frontend: `frontend/package.json` + `package-lock.json`.
 | Tailwind CSS | 4 | Stile |
 | shadcn/ui (stile base-nova, primitive Base UI) | CLI 4.23.0 | Componenti |
 | lucide-react | 1.77 | Icone |
+| Hanken Grotesk (@fontsource-variable) | 5.3.0 | Unico carattere, self-hosted |
 | ESLint, Prettier | 10, 3 | Lint e formattazione |
 
 ## Infrastruttura

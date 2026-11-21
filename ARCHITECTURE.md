@@ -57,6 +57,10 @@ Moduli pianificati e grafo delle dipendenze: analisi §4.
 `components/layout`, `features/<nome>/` (pagine, hook API, tipi della feature), `lib/`.
 Ogni feature contiene le proprie chiamate API come hook TanStack Query.
 
+Identità visiva: palette "Linea Argo" (lilla, neutri tinti, solo tema chiaro) definita
+come token in `src/index.css`; contesto di prodotto in `frontend/PRODUCT.md`, direzione
+della dashboard in `frontend/.impeccable/surfaces/`.
+
 ## Dati
 
 - `iam_db`: dati IAM. Schema gestito solo da Alembic (`backend/migrations`).

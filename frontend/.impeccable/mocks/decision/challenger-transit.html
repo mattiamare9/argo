@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><title>Diagramma notturno</title>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--ground:#10204a;--panel:#162a5c;--ink:#f4f1e8;--muted:#a9b3cf;--rule:#26407a;--red:#d8382f;--blue:#2b6fd6;--amber:#e9a823;--green:#2e9e5b}
+body{width:1440px;height:900px;overflow:hidden;font-family:"Hanken Grotesk",sans-serif;background:var(--ground);color:var(--ink);display:grid;grid-template-columns:232px 1fr}
+aside{border-right:1px solid var(--rule);padding:20px 16px;display:flex;flex-direction:column;gap:28px}
+.mark{font-weight:700;font-size:20px}
+nav{display:flex;flex-direction:column;gap:2px}
+nav a{padding:9px 12px;border-radius:6px;font-size:14px;color:var(--muted)}
+nav a.on{background:var(--panel);color:var(--ink);font-weight:600}
+main{padding:32px 44px;display:flex;flex-direction:column;gap:24px}
+h1{font-size:40px;font-weight:700;letter-spacing:-.02em}
+main>p{color:var(--muted);font-size:15px;margin-top:-14px}
+.map{position:relative;height:430px;background:var(--panel);border-radius:14px;border:1px solid var(--rule)}
+.l{position:absolute;height:12px;border-radius:6px}
+.v{position:absolute;width:12px;border-radius:6px}
+.s{position:absolute;width:30px;height:30px;border-radius:50%;background:var(--ink);border:6px solid var(--ground)}
+.lab{position:absolute;font-size:14px;font-weight:600}
+.lab span{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.row div{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:16px 18px;font-size:13px;color:var(--muted)}
+.row b{display:block;font-size:26px;color:var(--ink)}
+</style></head><body>
+<aside><div class="mark">Argo</div>
+<nav><a class="on">Rete</a><a>Dipendenti</a><a>Sincronizzazione</a><a>Operazioni</a><a>Dispositivi</a><a>Applicazioni</a><a>Registro</a><a>Impostazioni</a></nav></aside>
+<main>
+<h1>Tutte le linee in servizio</h1><p>File dei dipendenti letto alle 10:42 · nessuna interruzione</p>
+<div class="map">
+<div class="l" style="background:var(--red);left:80px;top:110px;width:900px"></div>
+<div class="l" style="background:var(--blue);left:80px;top:230px;width:620px"></div>
+<div class="v" style="background:var(--blue);left:694px;top:110px;height:132px"></div>
+<div class="l" style="background:var(--green);left:300px;top:340px;width:740px"></div>
+<div class="v" style="background:var(--amber);left:420px;top:110px;height:242px"></div>
+<div class="s" style="left:70px;top:101px"></div><div class="lab" style="left:62px;top:146px">File Excel<span>10:42</span></div>
+<div class="s" style="left:405px;top:101px"></div><div class="lab" style="left:380px;top:56px">Archivio Argo<span>26 persone</span></div>
+<div class="s" style="left:680px;top:101px"></div><div class="lab" style="left:660px;top:56px">Keycloak<span>operativo</span></div>
+<div class="s" style="left:960px;top:101px"></div><div class="lab" style="left:940px;top:146px">Email<span>operativa</span></div>
+<div class="s" style="left:405px;top:221px"></div><div class="lab" style="left:440px;top:262px">Operazioni<span>0 in coda</span></div>
+<div class="s" style="left:1025px;top:331px"></div><div class="lab" style="left:1000px;top:374px">App collegate<span>3 di 3</span></div>
+</div>
+<div class="row"><div><b>24</b>attivi</div><div><b>2</b>inattivi</div><div><b>0</b>da seguire</div><div><b>3</b>app collegate</div></div>
+</main></body></html>

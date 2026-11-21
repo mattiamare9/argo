@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><title>Linea Argo</title>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--ground:#f6f5f9;--panel:#fdfcff;--ink:#1d1b26;--muted:#625d73;--rule:#e3dfec;--line:#6e52a3;--line-deep:#5d4590;--amber:#c98a12}
+body{width:1440px;height:900px;overflow:hidden;font-family:"Hanken Grotesk",sans-serif;background:var(--ground);color:var(--ink);display:grid;grid-template-columns:232px 1fr}
+aside{background:var(--panel);border-right:1px solid var(--rule);padding:20px 16px;display:flex;flex-direction:column;gap:28px}
+.mark{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px;letter-spacing:-.01em}
+.mark i{width:28px;height:28px;border-radius:6px;background:var(--line);display:grid;place-items:center;color:#fff;font-style:normal;font-size:16px}
+nav{display:flex;flex-direction:column;gap:2px}
+nav a{padding:9px 12px;border-radius:6px;font-size:14px;color:var(--muted);text-decoration:none}
+nav a.on{background:#ece7f5;color:var(--line-deep);font-weight:600}
+main{display:flex;flex-direction:column;min-width:0}
+.band{background:var(--line);color:#fff;padding:36px 48px 34px}
+.band small{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.band h1{font-size:72px;font-weight:700;letter-spacing:-.03em;line-height:1;margin:0 0 14px}
+.band p{font-size:17px}
+.stations{background:var(--panel);border-bottom:1px solid var(--rule);padding:30px 48px 26px}
+.track{position:relative;display:grid;grid-template-columns:repeat(5,1fr)}
+.track:before{content:"";position:absolute;left:10%;right:10%;top:13px;height:10px;background:var(--line);border-radius:5px}
+.st{position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.st b{width:36px;height:36px;border-radius:50%;background:#fff;border:7px solid var(--line);z-index:1}
+.st strong{font-size:15px;font-weight:600}
+.st span{font-size:13px;color:var(--muted)}
+.cols{display:grid;grid-template-columns:1fr 1.4fr;gap:24px;padding:28px 48px}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:22px 24px}
+.card h2{font-size:15px;font-weight:600;margin-bottom:14px;display:flex;justify-content:space-between}
+.card h2 em{font-style:normal;font-weight:500;color:var(--muted);font-size:13px}
+.empty{padding:26px 0;color:var(--muted);font-size:15px}
+.empty strong{display:block;color:var(--ink);font-size:18px;margin-bottom:6px}
+.kpi{display:flex;gap:32px;margin-top:8px;border-top:1px solid var(--rule);padding-top:16px}
+.kpi div{font-size:13px;color:var(--muted)}
+.kpi b{display:block;font-size:30px;color:var(--ink);font-weight:700;letter-spacing:-.02em}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:0 0 10px;border-bottom:1px solid var(--rule)}
+td{padding:13px 0;border-bottom:1px solid var(--rule)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600}
+.pill:before{content:"";width:9px;height:9px;border-radius:50%;background:var(--line)}
+.pill.amber:before{background:var(--amber)}
+.mini{display:inline-flex;gap:3px;vertical-align:middle;margin-right:8px}
+.mini i{width:14px;height:5px;border-radius:3px;background:var(--line)}
+.mini i.o{background:var(--rule)}
+</style></head><body>
+<aside>
+  <div class="mark"><i>A</i>Argo</div>
+  <nav>
+    <a class="on">Panoramica</a><a>Dipendenti</a><a>Sincronizzazione</a><a>Operazioni</a><a>Dispositivi</a><a>Applicazioni</a><a>Registro</a><a>Impostazioni</a>
+  </nav>
+</aside>
+<main>
+  <section class="band">
+    <h1>Tutto in ordine</h1>
+    <p>Nessuna azione richiesta · file dei dipendenti letto alle 10:42 di oggi</p>
+  </section>
+  <section class="stations">
+    <div class="track">
+      <div class="st"><b></b><strong>File Excel</strong><span>letto alle 10:42</span></div>
+      <div class="st"><b></b><strong>Archivio Argo</strong><span>26 persone</span></div>
+      <div class="st"><b></b><strong>Accesso (Keycloak)</strong><span>operativo</span></div>
+      <div class="st"><b></b><strong>Operazioni</strong><span>0 in coda</span></div>
+      <div class="st"><b></b><strong>Email</strong><span>operativa</span></div>
+    </div>
+  </section>
+  <section class="cols">
+    <div class="card">
+      <h2>Da seguire <em>0</em></h2>
+      <div class="empty"><strong>Niente da fare</strong>Se un accesso non si chiude o serve una conferma, comparirà qui.</div>
+      <div class="kpi"><div><b>24</b>attivi</div><div><b>2</b>inattivi</div><div><b>3</b>app collegate</div></div>
+    </div>
+    <div class="card">
+      <h2>Ultimi cambi <em>dal file Excel</em></h2>
+      <table>
+        <tr><th>Persona</th><th>Cambio</th><th>Accessi</th><th>Quando</th></tr>
+        <tr><td>Marco Ferri</td><td>Attivo → Inattivo</td><td><span class="mini"><i></i><i></i><i></i><i></i><i></i></span><span class="pill">chiusi 5 su 5</span></td><td>ieri, 17:10</td></tr>
+        <tr><td>Sara Colombo</td><td>Nuova assunzione</td><td><span class="mini"><i></i><i></i><i class="o"></i></span><span class="pill amber">attesa passkey</span></td><td>ieri, 09:02</td></tr>
+        <tr><td>Luca Bianchi</td><td>Email aggiornata</td><td><span class="mini"><i></i><i></i></span><span class="pill">propagata</span></td><td>18 nov</td></tr>
+        <tr><td>Elena Moretti</td><td>Inattivo → Attivo</td><td><span class="mini"><i></i><i></i><i></i></span><span class="pill">riattivata</span></td><td>15 nov</td></tr>
+      </table>
+    </div>
+  </section>
+</main>
+</body></html>

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><title>Quadro chiavi</title>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--ground:#eef0ed;--panel:#f8f9f7;--ink:#26302c;--muted:#515c57;--rule:#d8ddd9;--steel:#3f5a4f;--brass:#c9a13b;--red:#b8382c}
+body{width:1440px;height:900px;overflow:hidden;font-family:"Hanken Grotesk",sans-serif;background:var(--ground);color:var(--ink);display:grid;grid-template-columns:232px 1fr}
+aside{background:var(--steel);color:#e8eeea;padding:20px 16px;display:flex;flex-direction:column;gap:28px}
+.mark{font-weight:700;font-size:20px}
+nav{display:flex;flex-direction:column;gap:2px}
+nav a{padding:9px 12px;border-radius:6px;font-size:14px}
+nav a.on{background:rgba(0,0,0,.22);font-weight:600}
+main{padding:32px 44px;display:flex;flex-direction:column;gap:24px}
+header{display:flex;justify-content:space-between;align-items:end}
+h1{font-size:34px;font-weight:700;letter-spacing:-.02em}
+header p{color:var(--muted);font-size:15px;margin-top:6px}
+.count{display:flex;gap:28px;font-size:13px;color:var(--muted)}
+.count b{display:block;font-size:30px;color:var(--ink)}
+.board{background:#dfe4e0;border:1px solid var(--rule);border-radius:12px;padding:24px;display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+.hook{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 14px 16px;display:flex;flex-direction:column;gap:10px}
+.tag{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.tag b{background:var(--brass);color:#2b2410;border-radius:4px;padding:1px 6px;font-size:11px}
+.hook strong{font-size:15px}
+.keys{display:flex;gap:6px}
+.keys i{width:18px;height:30px;border-radius:9px 9px 3px 3px;background:var(--brass)}
+.keys i.gone{background:none;border:2px dashed var(--rule)}
+.hook.off strong{color:var(--muted)}
+.hook.partial{outline:2px solid var(--red);outline-offset:-1px}
+.legend{display:flex;gap:24px;font-size:13px;color:var(--muted)}
+</style></head><body>
+<aside><div class="mark">Argo</div>
+<nav><a class="on">Quadro accessi</a><a>Dipendenti</a><a>Sincronizzazione</a><a>Operazioni</a><a>Dispositivi</a><a>Applicazioni</a><a>Registro</a><a>Impostazioni</a></nav></aside>
+<main>
+<header><div><h1>Tutte le chiavi sono al loro posto</h1><p>File dei dipendenti letto alle 10:42 · nessuna azione richiesta</p></div>
+<div class="count"><div><b>24</b>attivi</div><div><b>2</b>inattivi</div></div></header>
+<div class="board">
+<div class="hook"><div class="tag">E001 <b>3</b></div><strong>Anna Galli</strong><div class="keys"><i></i><i></i><i></i></div></div>
+<div class="hook"><div class="tag">E002 <b>3</b></div><strong>Luca Bianchi</strong><div class="keys"><i></i><i></i><i></i></div></div>
+<div class="hook off"><div class="tag">E003 <b>0</b></div><strong>Marco Ferri</strong><div class="keys"><i class="gone"></i><i class="gone"></i><i class="gone"></i></div></div>
+<div class="hook"><div class="tag">E004 <b>2</b></div><strong>Sara Colombo</strong><div class="keys"><i></i><i></i></div></div>
+<div class="hook"><div class="tag">E005 <b>3</b></div><strong>Elena Moretti</strong><div class="keys"><i></i><i></i><i></i></div></div>
+<div class="hook"><div class="tag">E006 <b>3</b></div><strong>Paolo Ricci</strong><div class="keys"><i></i><i></i><i></i></div></div>
+<div class="hook"><div class="tag">E007 <b>3</b></div><strong>Giulia Rinaldi</strong><div class="keys"><i></i><i></i><i></i></div></div>
+<div class="hook"><div class="tag">E008 <b>2</b></div><strong>Davide Conti</strong><div class="keys"><i></i><i></i></div></div>
+<div class="hook"><div class="tag">E009 <b>3</b></div><strong>Chiara Fontana</strong><div class="keys"><i></i><i></i><i></i></div></div>
+<div class="hook off"><div class="tag">E010 <b>0</b></div><strong>Roberto Greco</strong><div class="keys"><i class="gone"></i><i class="gone"></i></div></div>
+<div class="hook"><div class="tag">E011 <b>3</b></div><strong>Marta Lombardi</strong><div class="keys"><i></i><i></i><i></i></div></div>
+<div class="hook"><div class="tag">E012 <b>3</b></div><strong>Stefano Russo</strong><div class="keys"><i></i><i></i><i></i></div></div>
+</div>
+<div class="legend"><span>Chiave appesa: accesso attivo</span><span>Gancio vuoto: accesso revocato</span><span>Bordo rosso: revoca non completata</span></div>
+</main></body></html>
