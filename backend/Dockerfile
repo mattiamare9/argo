@@ -1,5 +1,5 @@
 # Stessa immagine per api e worker (deploy/compose.yaml: il worker usa `python -m app.worker`).
-FROM ghcr.io/astral-sh/uv:0.5.15 AS uv
+FROM ghcr.io/astral-sh/uv:0.13.9 AS uv
 
 FROM python:3.12.12-slim AS build
 COPY --from=uv /uv /usr/local/bin/uv
