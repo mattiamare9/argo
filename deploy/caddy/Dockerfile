@@ -2,7 +2,7 @@
 # Contesto di build: la radice del repository.
 # Il bundle è statico: si costruisce sull'architettura della macchina di build (veloce
 # anche quando l'immagine finale è arm64).
-FROM --platform=$BUILDPLATFORM node:22.23.5-alpine AS build
+FROM --platform=$BUILDPLATFORM node:26.13.1-alpine AS build
 WORKDIR /src
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
