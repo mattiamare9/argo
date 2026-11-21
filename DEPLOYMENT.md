@@ -137,9 +137,16 @@ Il realm Keycloak si importa **solo al primo avvio**: le modifiche successive a
 - Verificato in sviluppo il 2026-11-21: conteggi di dipendenti, audit e utenti Keycloak
   identici dopo il ripristino, trigger append-only presenti, passphrase errata rifiutata.
 
+## Monitoraggio
+
+- Configurare un servizio di uptime esterno (anche gratuito) su
+  `https://<ARGO_DOMAIN>/api/health`, con controllo ogni 5 minuti e avviso via email.
+- Risponde 503 sia se il database non è raggiungibile sia se il worker non dà segni di vita
+  da più di 2 minuti (`"worker": "stale"`). Senza worker mai avviato risponde 200 con
+  `"worker": "unknown"`.
+- `docker compose ps` mostra lo stato degli healthcheck dei container.
+
 ## Non ancora fatto (Fase 7)
 
-- Monitoraggio e alert esterni (es. uptime check su `/api/health`).
-- Rate limiting su `/api/auth/*` e `/api/v1/sync/*`.
 - Prova del deploy su una VPS reale: il compose di produzione è validato
   (`docker compose config`) ma non ancora avviato con domini e certificati veri.

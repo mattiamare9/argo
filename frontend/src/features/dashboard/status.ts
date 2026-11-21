@@ -12,6 +12,7 @@ const time = new Intl.DateTimeFormat("it-IT", {
 export type SystemInput = {
   apiDown: boolean
   dbDown: boolean
+  workerStale?: boolean
   overview?: SyncOverview
   openRuns?: Run[]
   now: number
@@ -26,6 +27,7 @@ export type SystemStatus = {
 export function systemStatus({
   apiDown,
   dbDown,
+  workerStale = false,
   overview,
   openRuns = [],
   now,
@@ -71,18 +73,35 @@ export function systemStatus({
     },
     {
       name: "Operazioni",
-      state: apiDown || dbDown ? "unknown" : partial.length ? "pending" : "ok",
-      detail: partial.length
-        ? `${partial.length} da completare`
-        : running
-          ? `${running} in corso`
-          : "nessuna in coda",
+      state:
+        apiDown || dbDown
+          ? "unknown"
+          : workerStale
+            ? "down"
+            : partial.length
+              ? "pending"
+              : "ok",
+      detail: workerStale
+        ? "ferme"
+        : partial.length
+          ? `${partial.length} da completare`
+          : running
+            ? `${running} in corso`
+            : "nessuna in coda",
     },
   ]
 
   if (apiDown) return { headline: "Argo non risponde", detail: RETRY, stations }
   if (dbDown)
     return { headline: "L'archivio non risponde", detail: RETRY, stations }
+  if (workerStale) {
+    return {
+      headline: "Le operazioni sono ferme",
+      detail:
+        "Il programma che esegue le operazioni non dà segnali da qualche minuto: nuovi ingressi e uscite restano in coda. Avvisa chi gestisce il sistema.",
+      stations,
+    }
+  }
   if (overview?.pending) {
     const n = overview.pending.deactivations.length
     return {

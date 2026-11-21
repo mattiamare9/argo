@@ -1,13 +1,16 @@
 """Coda di job persistente con retry, backoff e idempotenza. Non conosce il dominio."""
 
-from app.modules.jobs.models import Job, JobStatus
+from app.modules.jobs.models import Job, JobStatus, WorkerHeartbeat
 from app.modules.jobs.service import (
+    HEARTBEAT_INTERVAL,
+    HEARTBEAT_STALE_AFTER,
     LEASE,
     MAX_BACKOFF,
     Handler,
     ManualActionRequired,
     PermanentError,
     backoff,
+    beat,
     by_group,
     claim,
     complete,
@@ -16,17 +19,22 @@ from app.modules.jobs.service import (
     resolve_manual,
     retry_now,
     run_once,
+    worker_status,
 )
 
 __all__ = [
+    "HEARTBEAT_INTERVAL",
+    "HEARTBEAT_STALE_AFTER",
     "LEASE",
     "MAX_BACKOFF",
     "Handler",
     "Job",
     "JobStatus",
+    "WorkerHeartbeat",
     "ManualActionRequired",
     "PermanentError",
     "backoff",
+    "beat",
     "by_group",
     "claim",
     "complete",
@@ -35,4 +43,5 @@ __all__ = [
     "resolve_manual",
     "retry_now",
     "run_once",
+    "worker_status",
 ]

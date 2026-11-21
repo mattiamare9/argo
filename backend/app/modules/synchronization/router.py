@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, StringConstraints
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.ratelimit import limit_agent
 from app.db.session import get_db
 from app.modules.sessions import CurrentUser, require_csrf, require_role
 from app.modules.synchronization import service
@@ -69,7 +70,7 @@ async def current_agent(request: Request, db: AsyncSession = Depends(get_db)) ->
     return agent
 
 
-@agent_router.post("/snapshots")
+@agent_router.post("/snapshots", dependencies=[Depends(limit_agent)])
 async def post_snapshot(
     payload: SnapshotIn,
     request: Request,
@@ -83,7 +84,11 @@ async def post_snapshot(
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from exc
 
 
-@agent_router.post("/agent-status", status_code=status.HTTP_204_NO_CONTENT)
+@agent_router.post(
+    "/agent-status",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(limit_agent)],
+)
 async def post_agent_status(
     payload: AgentStatusIn,
     agent: SyncAgent = Depends(current_agent),

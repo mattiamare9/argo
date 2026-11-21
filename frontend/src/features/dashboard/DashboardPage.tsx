@@ -20,6 +20,7 @@ export function DashboardPage() {
   const status = systemStatus({
     apiDown: health.isError,
     dbDown: health.data?.database === "unreachable",
+    workerStale: health.data?.worker === "stale",
     overview: overview.data,
     openRuns: openRuns.data,
     now: overview.dataUpdatedAt,

@@ -60,6 +60,18 @@ Modello di sicurezza e stato delle misure. Rischi e ragionamento: analisi §7.
 | Header di sicurezza: HSTS, CSP restrittiva, `X-Frame-Options DENY`, `nosniff` | `Caddyfile` |
 | Backup cifrati AES-256 (PBKDF2), restore verificato in database separati | `backup.sh`, `restore.sh` |
 
+## In vigore (rate limiting)
+
+| Misura | Dove |
+|---|---|
+| `/api/auth/login` e `/api/auth/callback`: 20 richieste al minuto per IP, poi 429 con `Retry-After` | `app/core/ratelimit.py` |
+| `/api/v1/sync/snapshots` e `/agent-status`: 30 al minuto per IP (un agent invia al massimo una volta al minuto), blocca i tentativi a raffica sulla chiave | `app/core/ratelimit.py` |
+
+- Limiti configurabili (`ARGO_RATELIMIT_AUTH_PER_MINUTE`, `ARGO_RATELIMIT_AGENT_PER_MINUTE`,
+  `ARGO_RATELIMIT_ENABLED`). I contatori sono in memoria: validi con un solo processo API.
+- L'IP è l'ultima voce di `X-Forwarded-For`, accodata da Caddy: l'header è attendibile solo
+  perché l'API è raggiungibile unicamente tramite Caddy (nessuna porta pubblicata).
+
 ## Limiti noti
 
 - **Ruoli e stato riverificati ogni 5 minuti** su Keycloak: un ruolo tolto vale entro 5
@@ -85,7 +97,7 @@ Modello di sicurezza e stato delle misure. Rischi e ragionamento: analisi §7.
 - Primo collegamento: il primo snapshot crea un account e manda un invito passkey a ogni
   dipendente attivo. Decidere se serve una conferma anche per le creazioni di massa.
 - Fase 2+: segreti delle integrazioni cifrati in DB, chiave fuori dal DB.
-- Fase 7: HTTPS via Caddy, firewall, rate limiting, backup cifrati con restore test.
+- Fase 7: HTTPS via Caddy, firewall, backup cifrati con restore test.
 
 ## Segnalazioni
 

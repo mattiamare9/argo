@@ -11,7 +11,9 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging
+from app.core.ratelimit import RateLimiter
 from app.db.session import create_engine
+from app.modules import jobs
 from app.modules.applications.router import router as applications_router
 from app.modules.audit.router import router as audit_router
 from app.modules.employees.router import router as employees_router
@@ -49,6 +51,7 @@ def create_app(settings: Settings | None = None, http: httpx.AsyncClient | None 
     app.state.engine = engine
     app.state.sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
     app.state.http = http
+    app.state.limiter = RateLimiter()
     app.state.oidc = (
         OidcClient(
             OidcConfig(
@@ -82,6 +85,16 @@ def create_app(settings: Settings | None = None, http: httpx.AsyncClient | None 
         except (SQLAlchemyError, OSError):
             logger.exception("health check: database non raggiungibile")
             return JSONResponse({"status": "degraded", "database": "unreachable"}, status_code=503)
-        return JSONResponse({"status": "ok", "database": "ok"})
+        try:
+            async with request.app.state.sessionmaker() as db:
+                worker = await jobs.worker_status(db)
+        except (SQLAlchemyError, OSError):
+            logger.exception("health check: heartbeat del worker non leggibile")
+            return JSONResponse({"status": "degraded", "database": "unreachable"}, status_code=503)
+        if worker == "stale":
+            return JSONResponse(
+                {"status": "degraded", "database": "ok", "worker": worker}, status_code=503
+            )
+        return JSONResponse({"status": "ok", "database": "ok", "worker": worker})
 
     return app

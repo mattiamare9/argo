@@ -2,7 +2,10 @@
 
 import asyncio
 import logging
+import os
 import signal
+import socket
+import time
 
 import httpx
 from sqlalchemy.ext.asyncio import async_sessionmaker
@@ -15,6 +18,7 @@ from app.modules.identity import build_identity_provider
 
 logger = logging.getLogger("app.worker")
 IDLE_POLL_SECONDS = 2.0
+WORKER_ID = f"{socket.gethostname()}-{os.getpid()}"
 
 
 async def run(stop: asyncio.Event) -> None:
@@ -26,9 +30,13 @@ async def run(stop: asyncio.Event) -> None:
             build_identity_provider(settings, http), maker, settings, http
         )
         logger.info("worker avviato: %d tipi di job", len(handlers))
+        last_beat = float("-inf")
         while not stop.is_set():
             try:
                 async with maker() as db:
+                    if time.monotonic() - last_beat >= jobs.HEARTBEAT_INTERVAL.total_seconds():
+                        await jobs.beat(db, WORKER_ID)
+                        last_beat = time.monotonic()
                     worked = await jobs.run_once(db, handlers)
             except Exception:  # DB momentaneamente irraggiungibile: aspetta e riprova
                 logger.exception("ciclo del worker fallito")

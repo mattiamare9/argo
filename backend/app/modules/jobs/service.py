@@ -10,11 +10,14 @@ from collections.abc import Awaitable, Callable, Iterable
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules.jobs.models import Job, JobStatus
+from app.modules.jobs.models import Job, JobStatus, WorkerHeartbeat
+
+HEARTBEAT_INTERVAL = timedelta(seconds=30)
+HEARTBEAT_STALE_AFTER = timedelta(minutes=2)
 
 logger = logging.getLogger(__name__)
 
@@ -198,3 +201,22 @@ async def by_group(db: AsyncSession, group_ids: Iterable[uuid.UUID]) -> list[Job
         select(Job).where(Job.group_id.in_(list(group_ids))).order_by(Job.created_at, Job.kind)
     )
     return list(rows)
+
+
+async def beat(db: AsyncSession, worker_id: str, *, now: datetime | None = None) -> None:
+    now = _now(now)
+    statement = insert(WorkerHeartbeat).values(worker_id=worker_id, last_seen_at=now)
+    await db.execute(
+        statement.on_conflict_do_update(
+            index_elements=["worker_id"], set_={"last_seen_at": statement.excluded.last_seen_at}
+        )
+    )
+    await db.commit()
+
+
+async def worker_status(db: AsyncSession, *, now: datetime | None = None) -> str:
+    """\"ok\" se un worker è vivo da meno di 2 minuti, \"stale\" se no, \"unknown\" se mai visto."""
+    latest = await db.scalar(select(func.max(WorkerHeartbeat.last_seen_at)))
+    if latest is None:
+        return "unknown"
+    return "ok" if _now(now) - latest < HEARTBEAT_STALE_AFTER else "stale"

@@ -5,6 +5,7 @@ import { apiGet, apiPost } from "@/lib/api"
 export type Health = {
   status: "ok" | "degraded"
   database: "ok" | "unreachable"
+  worker?: "ok" | "stale" | "unknown"
 }
 
 // /api/health risponde 503 con un corpo valido quando il DB è giù: lo leggiamo comunque.

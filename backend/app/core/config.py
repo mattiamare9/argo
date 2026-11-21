@@ -38,6 +38,11 @@ class Settings(BaseSettings):
     # False prima del go-live: gli account si creano ma gli inviti partono con `send-invites`.
     send_invites: bool = True
 
+    # Limiti per IP al minuto (app/core/ratelimit.py).
+    ratelimit_enabled: bool = True
+    ratelimit_auth_per_minute: int = 20
+    ratelimit_agent_per_minute: int = 30
+
     @property
     def oidc_issuer(self) -> str:
         return f"{self.keycloak_public_url or self.keycloak_url}/realms/{self.keycloak_realm}"

@@ -3,6 +3,7 @@ from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.ratelimit import limit_auth
 from app.db.session import get_db
 from app.modules.sessions import service
 from app.modules.sessions.dependencies import SESSION_COOKIE, current_user, require_csrf
@@ -36,7 +37,7 @@ def _secure_cookies(request: Request) -> bool:
     return request.app.state.settings.environment == "production"
 
 
-@router.get("/login")
+@router.get("/login", dependencies=[Depends(limit_auth)])
 async def login(
     request: Request,
     next: str | None = None,
@@ -62,7 +63,7 @@ async def login(
     return response
 
 
-@router.get("/callback")
+@router.get("/callback", dependencies=[Depends(limit_auth)])
 async def callback(
     request: Request,
     state: str,

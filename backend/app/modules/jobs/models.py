@@ -19,6 +19,13 @@ class JobStatus(StrEnum):
     MANUAL_PENDING = "MANUAL_PENDING"  # serve un'azione umana tracciata (es. SaaS senza API)
 
 
+class WorkerHeartbeat(Base):
+    __tablename__ = "worker_heartbeats"
+
+    worker_id: Mapped[str] = mapped_column(String(200), primary_key=True)
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class Job(Base):
     __tablename__ = "jobs"
 
