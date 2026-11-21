@@ -99,15 +99,42 @@ Un revisore senza il contesto della conversazione ha trovato 6 difetti; 5 corret
 5. Cambiare l'indirizzo SCIM cancella il token salvato.
 6. Ruoli della dashboard: ora riverificati su Keycloak ogni 5 minuti (corretto al secondo giro).
 
+## CI/CD (terzo giro)
+
+- **Una CI unica** (`ci.yml`) senza filtri per percorso: tutto gira in ~3 minuti, ogni
+  controllo può essere obbligatorio senza il problema dei check "in attesa per sempre".
+- **Immagini costruite una volta in CI** (amd64 + arm64 per Oracle Ampere) e pubblicate su
+  GHCR; il server scarica l'immagine del commit, non ricompila. Il bundle della dashboard
+  si costruisce in modo nativo (`--platform=$BUILDPLATFORM`), solo il backend passa da QEMU.
+- **Sicurezza bloccante**: gitleaks, pip-audit, npm audit (soglia high), Trivy su
+  configurazione e immagini (CRITICAL con correzione disponibile). Il primo giro ha trovato
+  due problemi veri, corretti: Caddy girava come root, OpenSSL dell'immagine base aveva CVE
+  critiche (ora le immagini applicano gli aggiornamenti di sicurezza in build).
+- **Deploy via SSH spento** finché la VPS non esiste (`DEPLOY_ENABLED`).
+- **Email Microsoft 365 via OAuth2**: supportata da Keycloak 26.8.2 (verificato); la
+  configurazione è pronta, servono i dati dall'amministratore Microsoft.
+- Da residenceOS ho preso: concurrency, timeout, cache, controllo migrazioni, build unica
+  su GHCR, PR template, `make ci`. Non ho preso: il deploy legato a Coolify.
+
+## Risposte ricevute (2026-11-21 mattina)
+
+| Tema | Risposta | Conseguenza |
+|---|---|---|
+| VPN | Nessuna informazione per ora | Resta fuori dal perimetro finché non serve |
+| App custom (es. evacuationplan) | Non modificarle ora | Back-channel logout rimandato; l'offboarding chiude comunque l'account Keycloak |
+| SaaS | Probabilmente non da toccare; l'azienda usa Microsoft | Connettore Microsoft Graph/Entra ID valutabile in seguito |
+| PC aziendali | Strada più semplice per utente e titolare | Vedi sotto: proposta di non fare mTLS nel primo rilascio |
+| Email | Domanda su Mailpit | Mailpit non spedisce; in produzione Microsoft 365 via OAuth2 (pronto) |
+| VPS | Oracle (piano gratuito), sempre pronti a cambiare | Immagini multi-arch, deploy indipendente dal provider |
+| Conservazione log | Qualche anno, da chiedere all'azienda | Nessuna cancellazione automatica per ora |
+| Fonte dei dipendenti | Verrà scaricata da un sito web | Il Sync Agent ha già il punto di aggancio `SourceReader` |
+
 ## Rimandato, in attesa di te
 
 | Tema | Cosa serve da te |
 |---|---|
-| Fase 4: dispositivi, mTLS, step-ca | Come avviene l'enrollment dei PC aziendali; serve un MDM? |
-| App custom (back-channel logout) | Elenco delle app custom e se possiamo modificarle. |
-| SaaS reali | Elenco dei SaaS e se hanno SCIM o API (M365/Google Workspace?). |
-| VPN WireGuard | Dove gira il server WireGuard (VPS o sede?). |
-| SMTP di produzione | Provider: Outlook/M365 (probabile OAuth2) o servizio dedicato. |
-| VPS | Provider e politica di backup esterno. |
-| Retention audit | Quanto tenere i log (GDPR). |
-| Sync Agent su Windows | Il server con l'Excel è Windows? Serve un wrapper come servizio. |
+| Dispositivi aziendali (Fase 4) | Decidere se nel primo rilascio bastano le passkey (proposta) |
+| Microsoft 365 | Accesso di un amministratore Entra ID per l'app di posta (e, se vorrai, per un connettore) |
+| Fonte dei dipendenti dal sito web | URL, formato, autenticazione del sito |
+| Conservazione dei log | Durata concordata con l'azienda |
+| VPS Oracle | Creazione dell'account e della macchina (posso guidarti passo passo) |
