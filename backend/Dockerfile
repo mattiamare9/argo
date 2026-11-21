@@ -1,14 +1,14 @@
 # Stessa immagine per api e worker (deploy/compose.yaml: il worker usa `python -m app.worker`).
 FROM ghcr.io/astral-sh/uv:0.5.15 AS uv
 
-FROM python:3.12.12-slim AS build
+FROM python:3.15.2-slim AS build
 COPY --from=uv /uv /usr/local/bin/uv
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PROJECT_ENVIRONMENT=/venv
 WORKDIR /src
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 
-FROM python:3.12.12-slim
+FROM python:3.15.2-slim
 # Aggiornamenti di sicurezza dei pacchetti di sistema usciti dopo l'immagine base.
 RUN apt-get update && apt-get upgrade -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
