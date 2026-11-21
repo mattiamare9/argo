@@ -55,6 +55,8 @@ uv run python -m app.cli bootstrap-admin --employee-id DEVADMIN \
 - Apri il link, registra la passkey, poi vai su http://localhost:5173 e accedi con l'email.
 - Usa sempre `localhost`, non `127.0.0.1`: WebAuthn non accetta indirizzi IP.
 - Console Keycloak: http://localhost:8080 (utente e password di `deploy/.env`).
+- Tema di login: `deploy/keycloak/themes/argo` (CSS sopra il tema ufficiale `keycloak.v2`);
+  in sviluppo le modifiche si vedono ricaricando la pagina.
 - Il realm è in `deploy/keycloak/argo-realm.json` e si importa solo se non esiste. Per
   reimportarlo dopo una modifica: elimina il realm dalla console e riavvia il container.
 

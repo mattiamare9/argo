@@ -60,7 +60,9 @@ come cambiarla. Le decisioni che toccano l'architettura hanno anche un ADR.
 - **Dettagli tecnici degli errori visibili solo all'amministratore.**
 - **Conferma di massa in due passi nella pagina** (non un modale): il primo clic mostra
   chi e quanti, il secondo esegue.
-- **Pagina di login Keycloak con il tema predefinito**: un tema Argo è lavoro futuro.
+- **Tema di login "argo" per Keycloak**: estende il tema ufficiale cambiando solo colori,
+  font e fondo (struttura e accessibilità restano di Keycloak). Le email di invito usano
+  ancora il modello predefinito di Keycloak, in italiano.
 
 ## Produzione
 
@@ -79,6 +81,9 @@ come cambiarla. Le decisioni che toccano l'architettura hanno anche un ADR.
   dettagli tecnici solo all'amministratore; i passi manuali in ambra "da fare a mano",
   non in rosso.
 - **Interruttore inviti** `ARGO_SEND_INVITES` + comando `send-invites` (vedi decisione 1).
+- **Ruolo DB `argo_app` in produzione**: API e worker non possono alterare l'audit né lo
+  schema; solo le migrazioni usano il proprietario. Verificato su un Postgres usa-e-getta.
+- **Tema di login Argo** in Keycloak (vedi Interfaccia).
 
 ## Revisione di sicurezza indipendente (fine sessione)
 

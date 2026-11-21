@@ -132,7 +132,8 @@ services:
       ARGO_SMTP_PASSWORD: ${ARGO_SMTP_PASSWORD:-}
       ARGO_SMTP_STARTTLS: ${ARGO_SMTP_STARTTLS:-true}
     volumes:
-      - ./keycloak:/opt/keycloak/data/import:ro
+      - ./keycloak/argo-realm.json:/opt/keycloak/data/import/argo-realm.json:ro
+      - ./keycloak/themes/argo:/opt/keycloak/themes/argo:ro
     networks: [edge, backend, idp]
     depends_on:
       keycloak-db:

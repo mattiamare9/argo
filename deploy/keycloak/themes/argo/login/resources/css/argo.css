@@ -1,0 +1,113 @@
+/* Palette "Linea Argo" (frontend/DESIGN.md): neutri tinti di lilla, un solo accento. */
+@font-face {
+  font-family: "Hanken Grotesk";
+  src: url("../fonts/hanken-grotesk-latin-wght-normal.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+:root {
+  --pf-v5-global--FontFamily--text: "Hanken Grotesk", sans-serif;
+  --pf-v5-global--FontFamily--heading: "Hanken Grotesk", sans-serif;
+  --pf-v5-global--FontFamily--redhat-updated--heading--sans-serif: "Hanken Grotesk", sans-serif;
+  --pf-v5-global--FontFamily--redhat-updated--sans-serif: "Hanken Grotesk", sans-serif;
+  --pf-v5-global--primary-color--100: #6e52a3;
+  --pf-v5-global--primary-color--200: #4a3678;
+  --pf-v5-global--link--Color: #6e52a3;
+  --pf-v5-global--link--Color--hover: #4a3678;
+  --pf-v5-global--Color--100: #1d1b26;
+  --pf-v5-global--Color--200: #5f5a70;
+  --pf-v5-global--BorderColor--100: #d8d2e5;
+  --pf-v5-global--BackgroundColor--100: #fdfcff;
+  --pf-v5-global--active-color--100: #6e52a3;
+  --pf-v5-global--BorderRadius--sm: 0.4rem;
+  /* Barra in cima al riquadro di login (styles.css di keycloak.v2). */
+  --keycloak-card-top-color: #6e52a3;
+}
+
+html,
+body,
+#keycloak-bg,
+.pf-v5-c-login {
+  background: #f6f5f9 !important;
+  background-image: none !important;
+  color: #1d1b26;
+}
+
+::selection {
+  background: #6e52a3;
+  color: #ffffff;
+}
+
+#kc-header-wrapper {
+  color: #1d1b26;
+  font-weight: 700;
+  font-size: 1.5rem;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+/* Il marchio della dashboard: tessera lilla con la "A". */
+#kc-header-wrapper::before {
+  content: "A";
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.4rem;
+  background: #6e52a3;
+  color: #ffffff;
+  font-size: 0.9rem;
+}
+
+.pf-v5-c-login__main {
+  border: 1px solid #e3dfec;
+  border-radius: 0.7rem;
+  box-shadow: none;
+  overflow: hidden; /* la barra lilla segue gli angoli arrotondati */
+}
+
+#kc-page-title {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.pf-v5-c-button.pf-m-primary {
+  background-color: #6e52a3;
+  border-radius: 0.4rem;
+}
+
+.pf-v5-c-button.pf-m-primary:hover,
+.pf-v5-c-button.pf-m-primary:focus {
+  background-color: #4a3678;
+}
+
+:focus-visible {
+  outline: 2px solid #6e52a3;
+  outline-offset: 2px;
+}
+
+/* Regole di PatternFly più specifiche dei token: sovrascritte in modo mirato. */
+#kc-header-wrapper,
+#kc-header-wrapper * {
+  color: #1d1b26 !important;
+}
+
+.pf-v5-c-form-control {
+  --pf-v5-c-form-control--after--BorderBottomColor: #d8d2e5;
+  --pf-v5-c-form-control--hover--after--BorderBottomColor: #6e52a3;
+  --pf-v5-c-form-control--m-success--after--BorderBottomColor: #6e52a3;
+}
+
+.pf-v5-c-form-control::after {
+  border-bottom-color: #d8d2e5 !important;
+}
+
+.pf-v5-c-form-control:focus-within::after {
+  border-bottom-color: #6e52a3 !important;
+  border-bottom-width: 2px !important;
+}
