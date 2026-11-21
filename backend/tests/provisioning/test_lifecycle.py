@@ -292,3 +292,15 @@ async def test_stale_job_does_not_undo_a_newer_change(session, handlers, identit
     assert ("set_enabled", "E777", True) not in identity.calls
     assert ("send_enrollment", "E777") not in identity.calls
     assert ("set_enabled", "E777", False) in identity.calls
+
+
+async def test_invites_can_be_held_until_go_live(session, identity) -> None:
+    from app.core.config import Settings
+
+    held = provisioning.build_handlers(
+        identity, SameSession(session), Settings(database_url="x", send_invites=False), None
+    )
+    await provisioning.on_changes(session, [change("E900", ChangeKind.CREATED)], triggered_by="t")
+    await drain(session, held)
+    assert ("set_enabled", "E900", True) in identity.calls
+    assert ("send_enrollment", "E900") not in identity.calls

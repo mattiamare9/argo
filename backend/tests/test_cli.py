@@ -24,3 +24,21 @@ async def test_bootstrap_admin_creates_user_grants_role_and_sends_passkey_email(
         ("grant_role", "ADMIN", "iam-admin"),
         ("send_enrollment", "ADMIN"),
     ]
+
+
+async def test_send_invites_reports_who_was_not_reached() -> None:
+    from app.cli import send_invites
+    from app.modules.identity import UserNotFound
+
+    class Provider:
+        def __init__(self) -> None:
+            self.sent: list[str] = []
+
+        async def send_enrollment(self, employee_id: str) -> None:
+            if employee_id == "E2":
+                raise UserNotFound(employee_id)
+            self.sent.append(employee_id)
+
+    provider = Provider()
+    assert await send_invites(provider, ["E1", "E2", "E3"]) == ["E2"]
+    assert provider.sent == ["E1", "E3"]

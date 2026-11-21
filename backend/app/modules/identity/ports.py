@@ -33,3 +33,6 @@ class IdentityProvider(Protocol):
         """Invia l'email per registrare una passkey."""
 
     async def grant_role(self, employee_id: str, role: str) -> None: ...
+
+    async def current_roles(self, username: str) -> frozenset[str] | None:
+        """Ruoli di realm attuali; None se l'utente non esiste o è disabilitato."""

@@ -191,3 +191,26 @@ async def test_second_confirmation_is_rejected(send, api, login_as) -> None:
     url = f"/api/sync/snapshots/{leaving['snapshot_id']}/confirm"
     assert (await api.post(url, headers=HEADERS_CSRF)).status_code == 200
     assert (await api.post(url, headers=HEADERS_CSRF)).status_code == 409  # niente doppio apply
+
+
+async def test_admin_rotates_agent_key_from_dashboard(api, login_as) -> None:
+    await login_as(api, "iam-owner")
+    created = await api.post("/api/sync/agents", json={"name": "hr-2"}, headers=HEADERS_CSRF)
+    assert created.status_code == 403  # solo l'amministratore
+
+    await login_as(api, "iam-admin", username="admin2")
+    created = await api.post("/api/sync/agents", json={"name": "hr-2"}, headers=HEADERS_CSRF)
+    assert created.status_code == 201
+    key = created.json()["key"]
+    agent_headers = {"Authorization": f"Bearer {key}"}
+    ok = await api.post("/api/v1/sync/snapshots", json=snapshot(rec("E001")), headers=agent_headers)
+    assert ok.status_code == 200
+
+    again = await api.post("/api/sync/agents", json={"name": "hr-2"}, headers=HEADERS_CSRF)
+    assert again.status_code == 409
+    revoked = await api.post("/api/sync/agents/hr-2/revoke", headers=HEADERS_CSRF)
+    assert revoked.status_code == 204
+    after = await api.post(
+        "/api/v1/sync/snapshots", json=snapshot(rec("E002")), headers=agent_headers
+    )
+    assert after.status_code == 401

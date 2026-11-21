@@ -59,6 +59,13 @@ class KeycloakIdentityProvider:
         role_rep = (await self._request("GET", f"/roles/{role}")).json()
         await self._request("POST", f"/users/{uid}/role-mappings/realm", json=[role_rep])
 
+    async def current_roles(self, username: str) -> frozenset[str] | None:
+        user = await self._find(username)
+        if user is None or not user.get("enabled", False):
+            return None
+        response = await self._request("GET", f"/users/{user['id']}/role-mappings/realm/composite")
+        return frozenset(role["name"] for role in response.json())
+
     async def _find(self, employee_id: str) -> dict[str, Any] | None:
         try:
             response = await self._request(

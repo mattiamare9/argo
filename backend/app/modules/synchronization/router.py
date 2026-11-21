@@ -1,6 +1,8 @@
 import uuid
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from pydantic import BaseModel, StringConstraints
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
@@ -19,6 +21,44 @@ agent_router = APIRouter(prefix="/api/v1/sync", tags=["sync-agent"])
 dashboard_router = APIRouter(prefix="/api/sync", tags=["sync"])
 
 DASHBOARD = require_role("iam-admin", "iam-owner")
+ADMIN = require_role("iam-admin")
+
+
+class NewAgentIn(BaseModel):
+    name: Annotated[str, StringConstraints(strip_whitespace=True, pattern=r"^[a-z0-9-]{1,60}$")]
+
+
+class NewAgentOut(BaseModel):
+    name: str
+    key: str  # mostrata una sola volta
+
+
+@dashboard_router.post("/agents", status_code=201, dependencies=[Depends(require_csrf)])
+async def create_agent(
+    payload: NewAgentIn,
+    user: CurrentUser = Depends(ADMIN),
+    db: AsyncSession = Depends(get_db),
+) -> NewAgentOut:
+    try:
+        key = await service.create_agent(db, payload.name, actor=f"user:{user.username}")
+    except service.AgentConflict as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+    return NewAgentOut(name=payload.name, key=key)
+
+
+@dashboard_router.post(
+    "/agents/{name}/revoke", status_code=204, dependencies=[Depends(require_csrf)]
+)
+async def revoke_agent(
+    name: str,
+    user: CurrentUser = Depends(ADMIN),
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    try:
+        await service.revoke_agent(db, name, actor=f"user:{user.username}")
+    except LookupError as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Programma non trovato") from exc
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 async def current_agent(request: Request, db: AsyncSession = Depends(get_db)) -> SyncAgent:

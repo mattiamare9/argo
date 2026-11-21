@@ -32,7 +32,10 @@ def build_handlers(
         user = user_of(payload)
         await identity.ensure_user(user)
         await identity.set_enabled(user.employee_id, True)
-        await identity.send_enrollment(user.employee_id)
+        if settings.send_invites:
+            await identity.send_enrollment(user.employee_id)
+        else:
+            logger.info("invito per %s non inviato (ARGO_SEND_INVITES=false)", user.employee_id)
 
     async def update_profile(payload: dict[str, Any]) -> None:
         await identity.ensure_user(user_of(payload))
@@ -150,6 +153,10 @@ def _audited(
         outcome, details = "success", {}
         try:
             await fn(payload)
+        except ManualActionRequired as exc:
+            # Non è un guasto: serve una persona. La dashboard lo mostra in ambra.
+            outcome, details = "failure", {"manual_required": str(exc)[:500]}
+            raise
         except Exception as exc:
             outcome, details = "failure", {"error": f"{type(exc).__name__}: {exc}"[:500]}
             raise

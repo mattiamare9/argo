@@ -33,15 +33,33 @@ def hash_key(key: str) -> str:
     return hashlib.sha256(key.encode()).hexdigest()
 
 
-async def create_agent(db: AsyncSession, name: str) -> str:
+class AgentConflict(Exception):
+    pass
+
+
+async def create_agent(db: AsyncSession, name: str, *, actor: str = "cli") -> str:
     """Crea un agent e restituisce la chiave API in chiaro (mostrata una sola volta)."""
+    if await repository.agent_by_name(db, name) is not None:
+        raise AgentConflict(f"Esiste già un programma di lettura chiamato «{name}»")
     key = f"argo_{secrets.token_urlsafe(32)}"
     await repository.add(db, SyncAgent(name=name, key_hash=hash_key(key)))
     await audit.record(
-        db, actor="cli", action="sync.agent_created", outcome="success", target_id=name
+        db, actor=actor, action="sync.agent_created", outcome="success", target_id=name
     )
     await db.commit()
     return key
+
+
+async def revoke_agent(db: AsyncSession, name: str, *, actor: str) -> None:
+    """La chiave smette di funzionare subito; lo storico degli snapshot resta."""
+    agent = await repository.agent_by_name(db, name)
+    if agent is None:
+        raise LookupError(name)
+    agent.revoked_at = datetime.now(UTC)
+    await audit.record(
+        db, actor=actor, action="sync.agent_revoked", outcome="success", target_id=name
+    )
+    await db.commit()
 
 
 async def authenticate(db: AsyncSession, key: str | None) -> SyncAgent | None:

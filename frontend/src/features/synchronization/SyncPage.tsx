@@ -1,4 +1,9 @@
 import { Skeleton } from "@/components/ui/skeleton"
+import { useMe } from "@/features/auth/api"
+import {
+  NewAgentKey,
+  RevokeAgentButton,
+} from "@/features/synchronization/AgentKeys"
 import {
   useSyncOverview,
   type Snapshot,
@@ -36,6 +41,8 @@ function describe(summary: SnapshotSummary): string {
 
 export function SyncPage() {
   const overview = useSyncOverview()
+  const me = useMe()
+  const isAdmin = me.data?.roles.includes("iam-admin") ?? false
 
   return (
     <div className="flex flex-col gap-8 px-4 py-8 md:px-12 md:py-14">
@@ -85,11 +92,18 @@ export function SyncPage() {
                         Lettura sospesa: {agent.last_error}
                       </span>
                     )}
+                    {isAdmin && (
+                      <div className="pt-2">
+                        <RevokeAgentButton name={agent.name} />
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
             )}
           </section>
+
+          {isAdmin && <NewAgentKey />}
 
           <section aria-labelledby="letture" className="flex flex-col gap-3">
             <h2 id="letture" className="text-base font-semibold">

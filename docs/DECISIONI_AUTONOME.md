@@ -7,7 +7,7 @@ come cambiarla. Le decisioni che toccano l'architettura hanno anche un ADR.
 
 | # | Decisione | Perché | Se vuoi cambiarla |
 |---|---|---|---|
-| 1 | **Il primo collegamento del file crea gli account di tutti i dipendenti attivi e manda a ciascuno l'invito passkey.** | Coerente con "rendiamo la vita semplice": onboarding automatico. | Aggiungere una soglia anche per le creazioni di massa (come ADR-020), oppure un interruttore "inviti sospesi" fino al go-live. ~1 h di lavoro. |
+| 1 | **Il primo collegamento del file crea gli account di tutti i dipendenti attivi e manda a ciascuno l'invito passkey.** | Coerente con "rendiamo la vita semplice": onboarding automatico. | Già pronto l'interruttore: `ARGO_SEND_INVITES=false` crea gli account senza inviti; al go-live `python -m app.cli send-invites` li manda a tutti. Decidi tu quale usare. |
 | 2 | **Conferma delle disattivazioni di massa: sia `iam-admin` sia `iam-owner`.** | Dopo la consegna l'amministratore operativo è il titolare. | In `synchronization/router.py` usare solo `require_role("iam-admin")`. |
 | 3 | **Soglia di massa: 3 o più disattivazioni nello stesso snapshot.** | Con 10–30 persone, 1–2 uscite insieme sono normali. | `ARGO_MASS_DEACTIVATION_THRESHOLD`. |
 | 4 | **"Riprova" di un passo fallito: solo `iam-admin`. "Fatto" su un passo manuale: anche il titolare.** | Il retry è un'azione tecnica; il passo manuale lo fa chi gestisce l'app. | `provisioning/router.py`. |
@@ -69,6 +69,17 @@ come cambiarla. Le decisioni che toccano l'architettura hanno anche un ADR.
 - **Backup cifrati con openssl** (nessuna dipendenza nuova sulla VPS); restore in database
   separati per i test periodici.
 
+## Secondo giro (dopo il tuo "continua")
+
+- **Riverifica dei ruoli ogni 5 minuti** (correzione 6 del revisore). Se Keycloak è giù la
+  sessione resta valida con i ruoli già noti: preferisco non chiudere fuori il titolare.
+- **Chiavi dei Sync Agent gestite dalla dashboard** (crea, revoca), solo amministratore. La
+  rotazione è "crea nuova → aggiorna il programma → revoca vecchia".
+- **Pagina Registro** (audit, richiesta dalla specifica): filtri, ricerca, paginazione. I
+  dettagli tecnici solo all'amministratore; i passi manuali in ambra "da fare a mano",
+  non in rosso.
+- **Interruttore inviti** `ARGO_SEND_INVITES` + comando `send-invites` (vedi decisione 1).
+
 ## Revisione di sicurezza indipendente (fine sessione)
 
 Un revisore senza il contesto della conversazione ha trovato 6 difetti; 5 corretti con test:
@@ -81,7 +92,7 @@ Un revisore senza il contesto della conversazione ha trovato 6 difetti; 5 corret
    volte. Ora la riga è bloccata e la seconda riceve 409.
 4. Una ricerca utenti Keycloak in errore (realm sbagliato) ora è un errore, non "nessun utente".
 5. Cambiare l'indirizzo SCIM cancella il token salvato.
-6. *Non corretto, documentato:* i ruoli della dashboard restano quelli del login.
+6. Ruoli della dashboard: ora riverificati su Keycloak ogni 5 minuti (corretto al secondo giro).
 
 ## Rimandato, in attesa di te
 

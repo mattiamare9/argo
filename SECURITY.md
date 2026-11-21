@@ -40,6 +40,8 @@ Modello di sicurezza e stato delle misure. Rischi e ragionamento: analisi §7.
 | Ogni tentativo di provisioning nell'audit; i passi riusciti non vengono annullati | `provisioning` |
 | Offboarding chiude anche le sessioni della dashboard di Argo | `dashboard.revoke_sessions` |
 | Dettagli tecnici degli errori visibili solo all'amministratore | frontend |
+| Chiavi agent create e revocate dalla dashboard (solo `iam-admin`), mostrate una volta | Sincronizzazione |
+| Registro (audit) consultabile in dashboard, in sola lettura | `/registro` |
 
 ## In vigore (Fase 5)
 
@@ -60,9 +62,9 @@ Modello di sicurezza e stato delle misure. Rischi e ragionamento: analisi §7.
 
 ## Limiti noti
 
-- **Ruoli della dashboard fissati al login** (fino a 10 h): togliere `iam-admin` in Keycloak
-  non ha effetto finché la sessione non scade o il dipendente non esce. Correzione prevista:
-  revocare le sessioni al cambio di ruolo.
+- **Ruoli e stato riverificati ogni 5 minuti** su Keycloak: un ruolo tolto vale entro 5
+  minuti, un utente disabilitato perde la sessione. Se Keycloak non risponde si tengono i
+  ruoli noti (scelta di disponibilità: non chiudere fuori tutti durante un disservizio).
 
 - **Back-channel logout Keycloak → Argo non implementato** (ADR-022): un logout fatto
   direttamente su Keycloak non chiude la sessione della dashboard; la chiude l'offboarding
@@ -79,7 +81,6 @@ Modello di sicurezza e stato delle misure. Rischi e ragionamento: analisi §7.
 
 ## Pianificato
 
-- Revoca/rotazione della chiave agent dalla dashboard (oggi solo da DB).
 - Primo collegamento: il primo snapshot crea un account e manda un invito passkey a ogni
   dipendente attivo. Decidere se serve una conferma anche per le creazioni di massa.
 - Fase 2+: segreti delle integrazioni cifrati in DB, chiave fuori dal DB.

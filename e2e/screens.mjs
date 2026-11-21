@@ -63,6 +63,7 @@ try {
     ["sincronizzazione", "/sincronizzazione"],
     ["operazioni", "/operazioni"],
     ["applicazioni", "/applicazioni"],
+    ["registro", "/registro"],
   ]) {
     for (const [width, height] of [
       [1440, 900],

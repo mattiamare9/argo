@@ -18,6 +18,12 @@ async def agent_by_key_hash(session: AsyncSession, key_hash: str) -> SyncAgent |
     )
 
 
+async def agent_by_name(session: AsyncSession, name: str) -> SyncAgent | None:
+    return await session.scalar(
+        select(SyncAgent).where(SyncAgent.name == name, SyncAgent.revoked_at.is_(None))
+    )
+
+
 async def agents(session: AsyncSession) -> list[SyncAgent]:
     return list(await session.scalars(select(SyncAgent).where(SyncAgent.revoked_at.is_(None))))
 

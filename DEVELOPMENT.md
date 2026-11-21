@@ -72,6 +72,7 @@ Ripete il percorso reale: link email → registrazione passkey → login → das
 cd backend
 uv run python -m app.cli create-agent --name excel-hr-dev    # stampa la chiave una volta
 uv run python -m app.worker                                  # esegue i job (provisioning)
+uv run python -m app.cli send-invites                        # inviti passkey a tutti gli attivi
 
 cd ../sync-agent                                             # vedi sync-agent/README.md
 export ARGO_AGENT_API_KEY=<chiave>

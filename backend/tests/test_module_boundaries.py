@@ -13,7 +13,7 @@ MODULES_DIR = Path(__file__).resolve().parent.parent / "app" / "modules"
 
 ALLOWED_DEPENDENCIES: dict[str, set[str]] = {
     "applications": {"audit", "sessions"},
-    "audit": set(),
+    "audit": {"sessions"},  # solo router.py
     "connectors": {"jobs"},
     "employees": {"audit", "sessions"},
     "identity": set(),
@@ -27,7 +27,7 @@ ALLOWED_DEPENDENCIES: dict[str, set[str]] = {
         "jobs",
         "sessions",
     },
-    "sessions": {"audit"},
+    "sessions": {"audit", "identity"},
     "synchronization": {"audit", "employees", "provisioning", "sessions"},
 }
 

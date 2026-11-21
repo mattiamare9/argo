@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import secrets
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -6,6 +7,7 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules import audit
+from app.modules.identity import IdentityError, IdentityProvider
 from app.modules.sessions import repository
 from app.modules.sessions.models import LoginAttempt, UserSession
 from app.modules.sessions.oidc import (
@@ -20,6 +22,7 @@ IDLE_TIMEOUT = timedelta(minutes=30)  # allineato a ssoSessionIdleTimeout del re
 ABSOLUTE_TIMEOUT = timedelta(hours=10)  # allineato a ssoSessionMaxLifespan
 LOGIN_ATTEMPT_TTL = timedelta(minutes=10)
 TOUCH_INTERVAL = timedelta(minutes=1)
+ROLE_RECHECK = timedelta(minutes=5)
 DASHBOARD_ROLES = frozenset({"iam-admin", "iam-owner"})
 
 
@@ -114,7 +117,12 @@ async def complete_login(
     return token, attempt.next_path
 
 
-async def get_current(db: AsyncSession, token: str | None) -> CurrentUser | None:
+logger = logging.getLogger(__name__)
+
+
+async def get_current(
+    db: AsyncSession, token: str | None, identity: IdentityProvider | None = None
+) -> CurrentUser | None:
     if not token:
         return None
     user_session = await repository.get_by_token_hash(db, hash_token(token))
@@ -126,6 +134,21 @@ async def get_current(db: AsyncSession, token: str | None) -> CurrentUser | None
         or user_session.last_seen_at <= now - IDLE_TIMEOUT
     ):
         return None
+    checked = user_session.roles_checked_at or user_session.created_at
+    if identity is not None and checked <= now - ROLE_RECHECK:
+        try:
+            roles = await identity.current_roles(user_session.username)
+        except IdentityError:
+            # Keycloak irraggiungibile: si tengono i ruoli noti, per non chiudere fuori tutti.
+            logger.warning("verifica ruoli non riuscita per %s", user_session.username)
+        else:
+            user_session.roles_checked_at = now
+            if roles is None:  # utente disabilitato o eliminato su Keycloak
+                user_session.revoked_at = now
+                await db.commit()
+                return None
+            user_session.roles = sorted(DASHBOARD_ROLES & roles)
+            await db.commit()
     if user_session.last_seen_at <= now - TOUCH_INTERVAL:
         user_session.last_seen_at = now
         await db.commit()

@@ -1,5 +1,6 @@
 import {
   AppWindowIcon,
+  BookOpenTextIcon,
   FileSpreadsheetIcon,
   LayoutGridIcon,
   ListChecksIcon,
@@ -21,6 +22,7 @@ const NAV_ITEMS = [
   },
   { to: "/operazioni", label: "Operazioni", icon: ListChecksIcon },
   { to: "/applicazioni", label: "Applicazioni", icon: AppWindowIcon },
+  { to: "/registro", label: "Registro", icon: BookOpenTextIcon },
 ]
 
 export function AppLayout() {

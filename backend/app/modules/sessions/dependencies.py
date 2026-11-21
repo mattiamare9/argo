@@ -12,7 +12,9 @@ CSRF_HEADER = "X-Argo-CSRF"
 
 
 async def current_user(request: Request, db: AsyncSession = Depends(get_db)) -> CurrentUser:
-    user = await service.get_current(db, request.cookies.get(SESSION_COOKIE))
+    user = await service.get_current(
+        db, request.cookies.get(SESSION_COOKIE), request.app.state.identity
+    )
     if user is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Accesso richiesto")
     return user

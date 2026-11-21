@@ -35,6 +35,8 @@ class Settings(BaseSettings):
 
     # Uno snapshot con almeno questo numero di disattivazioni attende conferma (ADR-020).
     mass_deactivation_threshold: int = 3
+    # False prima del go-live: gli account si creano ma gli inviti partono con `send-invites`.
+    send_invites: bool = True
 
     @property
     def oidc_issuer(self) -> str:

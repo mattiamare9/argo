@@ -36,3 +36,5 @@ class UserSession(Base):
     last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Ultima verifica di ruoli e stato su Keycloak (i ruoli non restano quelli del login).
+    roles_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

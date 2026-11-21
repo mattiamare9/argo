@@ -13,7 +13,9 @@ from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging
 from app.db.session import create_engine
 from app.modules.applications.router import router as applications_router
+from app.modules.audit.router import router as audit_router
 from app.modules.employees.router import router as employees_router
+from app.modules.identity import build_identity_provider
 from app.modules.provisioning.router import router as provisioning_router
 from app.modules.sessions.oidc import OidcClient, OidcConfig
 from app.modules.sessions.router import router as auth_router
@@ -60,7 +62,12 @@ def create_app(settings: Settings | None = None, http: httpx.AsyncClient | None 
         if settings.oidc_client_secret
         else None
     )
+    # Usato dalle sessioni per riverificare ruoli e stato degli utenti (ADR-022).
+    app.state.identity = (
+        build_identity_provider(settings, http) if settings.keycloak_backend_client_secret else None
+    )
     app.include_router(auth_router)
+    app.include_router(audit_router)
     app.include_router(employees_router)
     app.include_router(agent_router)
     app.include_router(dashboard_router)
