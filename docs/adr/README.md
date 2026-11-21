@@ -24,5 +24,6 @@
 | [ADR-020](020-disattivazioni-di-massa-con-conferma.md) | Disattivazioni di massa con conferma admin | Accettato |
 | [ADR-021](021-username-keycloak-uguale-a-employee-id.md) | Username Keycloak uguale a employee_id | Accettato |
 | [ADR-022](022-bff-oidc-senza-libreria.md) | Login BFF senza libreria OIDC | Accettato |
+| [ADR-023](023-snapshot-completi-dalla-fonte.md) | Snapshot completi dalla fonte | Accettato |
 
 Nuova decisione → nuovo file numerato. Decisione cambiata → stato `Sostituito da ADR-NNN`.

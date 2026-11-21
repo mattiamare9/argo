@@ -4,9 +4,12 @@ import argparse
 import asyncio
 
 import httpx
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.core.config import get_settings
+from app.db.session import create_engine
 from app.modules.identity import IdentityProvider, IdentityUser, build_identity_provider
+from app.modules.synchronization import create_agent
 
 
 async def bootstrap_admin(provider: IdentityProvider, user: IdentityUser) -> None:
@@ -24,6 +27,14 @@ async def _run_bootstrap(args: argparse.Namespace) -> None:
     print(f"Creato {args.employee_id}: email di registrazione passkey inviata a {args.email}")
 
 
+async def _run_create_agent(args: argparse.Namespace) -> None:
+    engine = create_engine(get_settings().database_url)
+    async with async_sessionmaker(engine)() as db:
+        key = await create_agent(db, args.name)
+    await engine.dispose()
+    print(f"Agent {args.name} creato. Chiave API (mostrata solo ora):\n{key}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="app.cli")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -32,9 +43,13 @@ def main() -> None:
     boot.add_argument("--email", required=True)
     boot.add_argument("--first-name", required=True)
     boot.add_argument("--last-name", required=True)
+    agent = commands.add_parser("create-agent", help="crea un Sync Agent e la sua chiave API")
+    agent.add_argument("--name", required=True)
     args = parser.parse_args()
     if args.command == "bootstrap-admin":
         asyncio.run(_run_bootstrap(args))
+    elif args.command == "create-agent":
+        asyncio.run(_run_create_agent(args))
 
 
 if __name__ == "__main__":

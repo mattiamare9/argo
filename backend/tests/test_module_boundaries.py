@@ -13,8 +13,10 @@ MODULES_DIR = Path(__file__).resolve().parent.parent / "app" / "modules"
 
 ALLOWED_DEPENDENCIES: dict[str, set[str]] = {
     "audit": set(),
+    "employees": {"audit", "sessions"},
     "identity": set(),
     "sessions": {"audit"},
+    "synchronization": {"audit", "employees", "sessions"},
 }
 
 

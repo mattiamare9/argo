@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     oidc_client_id: str = "argo-dashboard"
     oidc_client_secret: SecretStr | None = None
 
+    # Uno snapshot con almeno questo numero di disattivazioni attende conferma (ADR-020).
+    mass_deactivation_threshold: int = 3
+
     @property
     def oidc_issuer(self) -> str:
         return f"{self.keycloak_url}/realms/{self.keycloak_realm}"

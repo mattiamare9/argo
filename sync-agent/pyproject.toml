@@ -1,0 +1,28 @@
+[project]
+name = "argo-sync-agent"
+version = "0.1.0"
+description = "Argo Sync Agent: reads the employee file and sends snapshots to the Argo backend"
+requires-python = ">=3.12"
+dependencies = [
+    "httpx==0.28.1",
+    "openpyxl==3.1.5",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+
+[dependency-groups]
+dev = [
+    "pytest==9.2.0",
+    "ruff==0.17.6",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

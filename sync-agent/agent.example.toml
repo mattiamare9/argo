@@ -1,0 +1,25 @@
+# Argo Sync Agent - example configuration.
+# The API key is NOT set here: export ARGO_AGENT_API_KEY in the environment.
+
+api_url = "https://argo.example.com"
+source_name = "excel-hr"
+excel_path = "/srv/hr/dipendenti.xlsx"
+# sheet = "Dipendenti"        # optional: first sheet if omitted
+
+poll_seconds = 60
+heartbeat_seconds = 3600
+stable_seconds = 10
+state_dir = ".argo-agent-state"
+
+# Header names in the file for each logical field.
+[columns]
+employee_id = "employee_id"
+email = "email"
+first_name = "first_name"
+last_name = "last_name"
+status = "status"
+
+# Source status values (case-insensitive, trimmed).
+[status_values]
+active = ["ATTIVO"]
+inactive = ["INATTIVO"]

@@ -12,8 +12,10 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging
 from app.db.session import create_engine
+from app.modules.employees.router import router as employees_router
 from app.modules.sessions.oidc import OidcClient, OidcConfig
 from app.modules.sessions.router import router as auth_router
+from app.modules.synchronization.router import agent_router, dashboard_router
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +59,9 @@ def create_app(settings: Settings | None = None, http: httpx.AsyncClient | None 
         else None
     )
     app.include_router(auth_router)
+    app.include_router(employees_router)
+    app.include_router(agent_router)
+    app.include_router(dashboard_router)
 
     @app.get("/api/health", tags=["system"])
     async def health(request: Request) -> JSONResponse:

@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+.argo-agent-state/
+agent.toml
+.pytest_cache/
+.ruff_cache/
