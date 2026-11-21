@@ -36,7 +36,8 @@ async def test_provision_creates_missing_user() -> None:
 
     connector, seen = scim(handler)
     await connector.provision(ACCOUNT)
-    get, post = seen
+    by_external_id, get, post = seen
+    assert by_external_id.url.params["filter"] == 'externalId eq "E001"'
     assert get.url.path == "/scim/v2/Users"
     assert get.url.params["filter"] == 'userName eq "mario.rossi@x.it"'
     assert get.headers["Authorization"] == "Bearer tok"
@@ -78,10 +79,13 @@ async def test_deprovision_patches_active_false() -> None:
     }
 
 
-async def test_deprovision_missing_user_is_success() -> None:
+async def test_deprovision_missing_user_needs_manual_check() -> None:
+    from app.modules.jobs import ManualActionRequired
+
     connector, seen = scim(empty)
-    await connector.deprovision(ACCOUNT)
-    assert [r.method for r in seen] == ["GET"]
+    with pytest.raises(ManualActionRequired):
+        await connector.deprovision(ACCOUNT)
+    assert [r.method for r in seen] == ["GET", "GET"]  # externalId, poi userName
 
 
 @pytest.mark.parametrize("code", [401, 403])

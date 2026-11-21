@@ -60,9 +60,12 @@ class KeycloakIdentityProvider:
         await self._request("POST", f"/users/{uid}/role-mappings/realm", json=[role_rep])
 
     async def _find(self, employee_id: str) -> dict[str, Any] | None:
-        response = await self._request(
-            "GET", "/users", params={"username": employee_id, "exact": "true"}
-        )
+        try:
+            response = await self._request(
+                "GET", "/users", params={"username": employee_id, "exact": "true"}
+            )
+        except UserNotFound as exc:  # 404 sulla ricerca: realm o URL sbagliati
+            raise IdentityError("ricerca utenti non disponibile: controlla il realm") from exc
         users = response.json()
         return users[0] if users else None
 

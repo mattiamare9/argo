@@ -115,6 +115,12 @@ async def apply_changes(
     return applied
 
 
+async def current_status(session: AsyncSession, employee_id: str) -> str | None:
+    found = await repository.get_by_keys(session, [key_of(employee_id)])
+    employee = found.get(key_of(employee_id))
+    return employee.status if employee else None
+
+
 async def list_employees(
     session: AsyncSession,
     *,

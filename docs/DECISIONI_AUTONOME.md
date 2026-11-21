@@ -69,6 +69,20 @@ come cambiarla. Le decisioni che toccano l'architettura hanno anche un ADR.
 - **Backup cifrati con openssl** (nessuna dipendenza nuova sulla VPS); restore in database
   separati per i test periodici.
 
+## Revisione di sicurezza indipendente (fine sessione)
+
+Un revisore senza il contesto della conversazione ha trovato 6 difetti; 5 corretti con test:
+
+1. **Critico:** un job in ritardo poteva annullare un cambio più recente (es. invito ritentato
+   dopo l'uscita → account riaperto). Ora ogni passo ricontrolla lo stato attuale.
+2. **Importante:** "account non trovato" o "app non più gestita" risultavano un offboarding
+   riuscito. Ora diventano un passo manuale da confermare; SCIM cerca per `externalId`.
+3. **Importante:** due conferme della stessa disattivazione di massa potevano applicarla due
+   volte. Ora la riga è bloccata e la seconda riceve 409.
+4. Una ricerca utenti Keycloak in errore (realm sbagliato) ora è un errore, non "nessun utente".
+5. Cambiare l'indirizzo SCIM cancella il token salvato.
+6. *Non corretto, documentato:* i ruoli della dashboard restano quelli del login.
+
 ## Rimandato, in attesa di te
 
 | Tema | Cosa serve da te |

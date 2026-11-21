@@ -9,10 +9,10 @@ import httpx
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.config import Settings
-from app.modules import applications, audit, sessions
+from app.modules import applications, audit, employees, sessions
 from app.modules.connectors import AppAccount, build_connector
 from app.modules.identity import IdentityProvider, IdentityUser, UserNotFound
-from app.modules.jobs import Handler
+from app.modules.jobs import Handler, ManualActionRequired
 
 logger = logging.getLogger(__name__)
 
@@ -37,17 +37,24 @@ def build_handlers(
     async def update_profile(payload: dict[str, Any]) -> None:
         await identity.ensure_user(user_of(payload))
 
+    def missing_account(employee_id: str) -> ManualActionRequired:
+        # Un account non trovato non è un account chiuso: può esistere con un altro nome.
+        return ManualActionRequired(
+            f"Nessun account aziendale trovato per {employee_id}: verifica in Keycloak che non "
+            "esista con un altro nome utente, poi premi Fatto."
+        )
+
     async def disable(payload: dict[str, Any]) -> None:
         try:
             await identity.set_enabled(payload["employee_id"], False)
-        except UserNotFound:
-            logger.info("nessun account per %s: nulla da disattivare", payload["employee_id"])
+        except UserNotFound as exc:
+            raise missing_account(payload["employee_id"]) from exc
 
     async def logout(payload: dict[str, Any]) -> None:
         try:
             await identity.logout(payload["employee_id"])
-        except UserNotFound:
-            logger.info("nessun account per %s: nessuna sessione", payload["employee_id"])
+        except UserNotFound as exc:
+            raise missing_account(payload["employee_id"]) from exc
 
     async def revoke_dashboard(payload: dict[str, Any]) -> None:
         async with sessionmaker() as db:
@@ -58,9 +65,13 @@ def build_handlers(
         async with sessionmaker() as db:
             app = await applications.get_application(db, uuid.UUID(payload["app_id"]))
         if app is None or not app.enabled:
-            logger.info(
-                "applicazione %s eliminata o disabilitata: passo ignorato", payload["app_id"]
-            )
+            if action == "deprovision":  # l'account può essere ancora aperto
+                raise ManualActionRequired(
+                    f"L'applicazione «{payload.get('label', payload['app_id'])}» non è più "
+                    f"gestita da Argo: verifica a mano che l'account di {payload['email']} "
+                    "sia chiuso, poi premi Fatto."
+                )
+            logger.info("applicazione %s eliminata o sospesa: nulla da creare", payload["app_id"])
             return
         connector = build_connector(app, settings, http)
         account = AppAccount(
@@ -83,7 +94,49 @@ def build_handlers(
         "identity.logout": logout,
         "dashboard.revoke_sessions": revoke_dashboard,
     }
-    return {kind: _audited(kind, fn, sessionmaker) for kind, fn in plain.items()}
+    return {
+        kind: _audited(kind, _current_only(kind, fn, sessionmaker), sessionmaker)
+        for kind, fn in plain.items()
+    }
+
+
+# Passi che hanno senso solo se il dipendente è ancora nello stato che li ha generati.
+REQUIRES_STATUS = {
+    "identity.provision": "ACTIVE",
+    "identity.update_profile": "ACTIVE",
+    "app.provision": "ACTIVE",
+    "identity.disable": "INACTIVE",
+    "identity.logout": "INACTIVE",
+    "dashboard.revoke_sessions": "INACTIVE",
+    "app.deprovision": "INACTIVE",
+}
+
+
+def _current_only(
+    kind: str,
+    fn: Callable[[dict[str, Any]], Awaitable[None]],
+    sessionmaker: async_sessionmaker[AsyncSession],
+) -> Callable[[dict[str, Any]], Awaitable[None]]:
+    """Un job in ritardo (retry) non deve annullare un cambio più recente.
+
+    Es. un invito ritentato dopo che il dipendente è uscito, o una disattivazione ritentata
+    dopo una riassunzione: il passo viene saltato e il run più recente fa testo.
+    """
+
+    async def run(payload: dict[str, Any]) -> None:
+        async with sessionmaker() as db:
+            status = await employees.current_status(db, payload["employee_id"])
+        if status is not None and status != REQUIRES_STATUS[kind]:
+            logger.info(
+                "%s per %s saltato: il dipendente ora è %s",
+                kind,
+                payload["employee_id"],
+                status,
+            )
+            return
+        await fn(payload)
+
+    return run
 
 
 def _audited(

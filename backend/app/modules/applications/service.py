@@ -149,6 +149,9 @@ async def update(
         raise InvalidApplication("name ed enabled non possono essere null")
     if data.config is not None:
         validate_config(app.connector, data.config)
+        # Il token non deve partire verso un indirizzo diverso da quello per cui è stato dato.
+        if data.config.get("base_url") != app.config.get("base_url") and "secret" not in changes:
+            app.secret_ciphertext = None
     if "secret" in changes:
         _check_secret_allowed(app.connector, data.secret)
         app.secret_ciphertext = _encrypt(settings, data.secret) if data.secret else None

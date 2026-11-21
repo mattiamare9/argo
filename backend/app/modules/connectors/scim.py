@@ -5,7 +5,7 @@ from typing import Any
 import httpx
 
 from app.modules.connectors.ports import AppAccount
-from app.modules.jobs import PermanentError
+from app.modules.jobs import ManualActionRequired, PermanentError
 
 USER_SCHEMA = "urn:ietf:params:scim:schemas:core:2.0:User"
 PATCH_SCHEMA = "urn:ietf:params:scim:api:messages:2.0:PatchOp"
@@ -31,12 +31,20 @@ class ScimConnector:
             )
         return response
 
-    async def _find_id(self, email: str) -> str | None:
-        escaped = email.replace("\\", "\\\\").replace('"', '\\"')
-        response = await self._send("GET", "/Users", params={"filter": f'userName eq "{escaped}"'})
+    async def _search(self, attribute: str, value: str) -> str | None:
+        escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+        response = await self._send(
+            "GET", "/Users", params={"filter": f'{attribute} eq "{escaped}"'}
+        )
         response.raise_for_status()
         resources = response.json().get("Resources") or []
         return resources[0]["id"] if resources else None
+
+    async def _find_id(self, account: AppAccount) -> str | None:
+        # Prima externalId (= employee_id, stabile); poi userName, che cambia con l'email.
+        return await self._search("externalId", account.employee_id) or await self._search(
+            "userName", account.email
+        )
 
     async def _set_active(self, user_id: str, active: bool) -> httpx.Response:
         body = {
@@ -46,7 +54,7 @@ class ScimConnector:
         return await self._send("PATCH", f"/Users/{user_id}", json=body)
 
     async def provision(self, account: AppAccount) -> None:
-        user_id = await self._find_id(account.email)
+        user_id = await self._find_id(account)
         if user_id is not None:
             (await self._set_active(user_id, True)).raise_for_status()
             return
@@ -61,9 +69,13 @@ class ScimConnector:
         (await self._send("POST", "/Users", json=body)).raise_for_status()
 
     async def deprovision(self, account: AppAccount) -> None:
-        user_id = await self._find_id(account.email)
+        user_id = await self._find_id(account)
         if user_id is None:
-            return  # nessun account: niente da disattivare
+            # Non trovato non vuol dire chiuso (es. account creato a mano con altri dati).
+            raise ManualActionRequired(
+                f"Nessun account trovato per {account.email} ({account.employee_id}): "
+                "verifica a mano che sia chiuso, poi premi Fatto."
+            )
         response = await self._set_active(user_id, False)
         if response.status_code != 404:  # sparito nel frattempo: obiettivo raggiunto
             response.raise_for_status()

@@ -181,3 +181,13 @@ async def test_email_swap_in_one_snapshot_is_allowed(send) -> None:
 
 async def test_employees_list_requires_role(api) -> None:
     assert (await api.get("/api/employees")).status_code == 401
+
+
+async def test_second_confirmation_is_rejected(send, api, login_as) -> None:
+    await send(snapshot(*(rec(f"E00{i}") for i in range(1, 4))))
+    leaving = snapshot(*(rec(f"E00{i}", "INACTIVE") for i in range(1, 4)))
+    await send(leaving)
+    await login_as(api, "iam-admin")
+    url = f"/api/sync/snapshots/{leaving['snapshot_id']}/confirm"
+    assert (await api.post(url, headers=HEADERS_CSRF)).status_code == 200
+    assert (await api.post(url, headers=HEADERS_CSRF)).status_code == 409  # niente doppio apply

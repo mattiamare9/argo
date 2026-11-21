@@ -247,7 +247,7 @@ async def overview(db: AsyncSession, recent_limit: int = 10) -> SyncOverview:
 
 
 async def _pending(db: AsyncSession, snapshot_id: uuid.UUID) -> SyncSnapshot:
-    snapshot = await repository.snapshot(db, snapshot_id)
+    snapshot = await repository.snapshot(db, snapshot_id, lock=True)
     if snapshot is None or snapshot.status != "pending_confirmation":
         raise SnapshotNotPending(str(snapshot_id))
     return snapshot

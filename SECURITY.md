@@ -60,6 +60,10 @@ Modello di sicurezza e stato delle misure. Rischi e ragionamento: analisi §7.
 
 ## Limiti noti
 
+- **Ruoli della dashboard fissati al login** (fino a 10 h): togliere `iam-admin` in Keycloak
+  non ha effetto finché la sessione non scade o il dipendente non esce. Correzione prevista:
+  revocare le sessioni al cambio di ruolo.
+
 - **Back-channel logout Keycloak → Argo non implementato** (ADR-022): un logout fatto
   direttamente su Keycloak non chiude la sessione della dashboard; la chiude l'offboarding
   o la scadenza per inattività (30 min).

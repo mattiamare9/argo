@@ -103,3 +103,34 @@ async def test_secret_is_never_returned_nor_audited(api, session, login_as) -> N
         select(AuditEvent).where(AuditEvent.target_type == "application")
     )
     assert all("tok-segreto" not in str(e.details) for e in events)
+
+
+async def test_changing_scim_address_drops_the_token(session, login_as) -> None:
+    from cryptography.fernet import Fernet
+
+    from app.core.config import Settings
+    from app.modules.applications import service
+    from app.modules.applications.schemas import ApplicationCreate, ApplicationUpdate
+
+    settings = Settings(database_url="x", secrets_key=Fernet.generate_key().decode())
+    created = await service.create(
+        session,
+        settings,
+        ApplicationCreate(
+            slug="crm2",
+            name="CRM",
+            connector="scim",
+            config={"base_url": "https://crm.example/scim/v2"},
+            secret="tok",
+        ),
+        actor="t",
+    )
+    assert created.has_secret
+    moved = await service.update(
+        session,
+        settings,
+        created.id,
+        ApplicationUpdate(config={"base_url": "https://altro.example/scim/v2"}),
+        actor="t",
+    )
+    assert not moved.has_secret  # il token non viene inviato al nuovo indirizzo

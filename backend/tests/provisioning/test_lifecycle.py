@@ -147,12 +147,15 @@ async def test_exhausted_retries_leave_a_visible_partial_offboarding(
     assert "logout non disponibile" in failed.last_error
 
 
-async def test_offboarding_without_account_succeeds(session, handlers) -> None:
+async def test_offboarding_without_account_asks_for_manual_check(session, handlers) -> None:
     await provisioning.on_changes(
         session, [change("E404", ChangeKind.DEACTIVATED, "INACTIVE")], triggered_by="t"
     )
     await drain(session, handlers)
-    assert (await runs(session))["E404"].status == "completed"
+    run = (await runs(session))["E404"]
+    assert run.status == "partial"  # "non trovato" non è "chiuso"
+    statuses = {s.kind: s.status for s in run.steps}
+    assert statuses["identity.disable"] == "MANUAL_PENDING"
 
 
 async def test_profile_update_of_inactive_employee_is_ignored(session) -> None:
@@ -262,3 +265,30 @@ def test_app_key_of_untouched_active_employee_is_hung() -> None:
     assert app_key_state("ACTIVE", None) == "hung"
     assert app_key_state("INACTIVE", None) == "returned"
     assert app_key_state("INACTIVE", "partial") == "pending"
+
+
+async def test_stale_job_does_not_undo_a_newer_change(session, handlers, identity) -> None:
+    """Un invito ritentato dopo che il dipendente è uscito non riapre l'account."""
+    from app.modules import employees
+    from app.modules.employees import EmployeeRecord
+
+    record = EmployeeRecord(
+        employee_id="E777", email="e777@x.it", first_name="N", last_name="C", status="ACTIVE"
+    )
+    plan = await employees.plan_changes(session, [record])
+    applied = await employees.apply_changes(session, plan, source="t", actor="t")
+    identity.failing.add("send_enrollment")
+    await provisioning.on_changes(session, applied, triggered_by="t")
+    await drain(session, handlers)  # provision fallisce: RETRYING
+
+    leaving = record.model_copy(update={"status": "INACTIVE"})
+    plan = await employees.plan_changes(session, [leaving])
+    applied = await employees.apply_changes(session, plan, source="t", actor="t")
+    await provisioning.on_changes(session, applied, triggered_by="t")
+    identity.failing.clear()
+    identity.calls.clear()
+    await drain(session, handlers, now=later(1))
+
+    assert ("set_enabled", "E777", True) not in identity.calls
+    assert ("send_enrollment", "E777") not in identity.calls
+    assert ("set_enabled", "E777", False) in identity.calls

@@ -39,7 +39,9 @@ def scim_server() -> FakeScim:
 @pytest.fixture
 def handlers(session, scim_server):
     http = httpx.AsyncClient(transport=httpx.MockTransport(scim_server))
-    return provisioning.build_handlers(FakeIdentity(), SameSession(session), SETTINGS, http)
+    identity = FakeIdentity()
+    identity.users.add("E001")  # l'account aziendale esiste: la disattivazione riesce
+    return provisioning.build_handlers(identity, SameSession(session), SETTINGS, http)
 
 
 async def add_apps(session) -> tuple[Application, Application]:
@@ -105,7 +107,9 @@ async def test_onboarding_provisions_apps_and_profile_update_does_not(
     assert [s.kind for s in updated[0].steps] == ["identity.update_profile"]
 
 
-async def test_disabled_apps_get_no_jobs_and_deleted_apps_are_skipped(session, handlers) -> None:
+async def test_disabled_apps_get_no_jobs_and_deleted_apps_need_manual_check(
+    session, handlers
+) -> None:
     manual, scim = await add_apps(session)
     scim.enabled = False
     await session.flush()
@@ -114,8 +118,12 @@ async def test_disabled_apps_get_no_jobs_and_deleted_apps_are_skipped(session, h
 
     await session.delete(manual)
     await session.flush()
-    await drain(session, handlers)  # l'app non c'è più: successo, non errore
-    assert (await runs(session))["E001"].status == "completed"
+    await drain(session, handlers)
+    # L'app non è più gestita: l'account potrebbe essere ancora aperto, serve una verifica.
+    run = (await runs(session))["E001"]
+    assert run.status == "partial"
+    (step,) = [s for s in run.steps if s.kind == "app.deprovision"]
+    assert step.status == "MANUAL_PENDING"
 
 
 async def test_board_has_a_key_per_enabled_app(api, session, login_as, handlers) -> None:

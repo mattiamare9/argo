@@ -22,8 +22,13 @@ async def agents(session: AsyncSession) -> list[SyncAgent]:
     return list(await session.scalars(select(SyncAgent).where(SyncAgent.revoked_at.is_(None))))
 
 
-async def snapshot(session: AsyncSession, snapshot_id: uuid.UUID) -> SyncSnapshot | None:
-    return await session.get(SyncSnapshot, snapshot_id)
+async def snapshot(
+    session: AsyncSession, snapshot_id: uuid.UUID, *, lock: bool = False
+) -> SyncSnapshot | None:
+    """Con lock=True blocca la riga fino al commit (conferme concorrenti, snapshot nuovi)."""
+    return await session.get(
+        SyncSnapshot, snapshot_id, with_for_update=lock, populate_existing=lock
+    )
 
 
 async def supersede_pending(session: AsyncSession, now: datetime) -> None:
