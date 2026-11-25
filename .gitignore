@@ -13,3 +13,4 @@ graft/
 .ignore
 frontend/.impeccable/review/
 frontend/.impeccable/build/
+deploy/proxy/sites/*.caddy

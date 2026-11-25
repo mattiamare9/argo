@@ -1,9 +1,15 @@
-# Unico punto di ingresso pubblico (ADR-012). HTTPS automatico con Let's Encrypt.
+# Ingresso di Argo dietro il proxy principale della VPS (deploy/proxy), che fa l'HTTPS:
+# qui solo HTTP sulla rete Docker `proxy`.
 {
-	email {$ARGO_ACME_EMAIL}
+	servers {
+		# Il proxy principale è sulla rete privata Docker: se ne accettano X-Forwarded-For/Proto.
+		# shortcut: anche le altre app sulla rete `proxy` sono "fidate", e potrebbero falsificare
+		# l'IP visto dal limite di richieste; se serve, una rete dedicata tra proxy e Argo.
+		trusted_proxies static private_ranges
+	}
 }
 
-{$ARGO_DOMAIN} {
+http://{$ARGO_DOMAIN} {
 	encode zstd gzip
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
@@ -15,7 +21,10 @@
 	}
 
 	handle /api/* {
-		reverse_proxy api:8000
+		# Un solo IP, quello del client: l'API usa l'ultima voce (core/ratelimit.py).
+		reverse_proxy api:8000 {
+			header_up X-Forwarded-For {client_ip}
+		}
 	}
 
 	# Dashboard: file statici compilati, fallback a index.html per le route del client.
@@ -26,7 +35,7 @@
 	}
 }
 
-{$ARGO_AUTH_DOMAIN} {
+http://{$ARGO_AUTH_DOMAIN} {
 	encode zstd gzip
 	header -Server
 	# La console e l'Admin API di Keycloak non sono esposte su Internet:

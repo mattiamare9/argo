@@ -42,7 +42,8 @@ poi il link in Mailpit (http://127.0.0.1:8025). Test E2E: `cd e2e && npm run pas
 1. **Risposte del titolare** (`docs/DOMANDE_TITOLARE.md`): sbloccano la produzione.
 2. **Fonte dipendenti dal sito web**: nuovo `SourceReader` in `sync-agent/argo_agent/sources/`
    (contratto invariato: `docs/sync-api.md`). Il resto non cambia.
-3. **Prima installazione su Oracle Cloud** (ARM, piano gratuito): seguire `DEPLOYMENT.md`,
+3. **Prima installazione sulla VPS Aruba** (195.231.64.149, 8 vCPU / 16 GB, condivisa con
+   altre app dietro `deploy/proxy`): seguire `DEPLOYMENT.md`,
    poi attivare il deploy automatico (`DEPLOY_ENABLED` + segreti SSH).
 4. **Email Microsoft 365**: app Entra ID con `SMTP.SendAsApp` (`DEPLOYMENT.md`, sezione Email).
 5. Dopo: conservazione dei log, connettori per i programmi reali, eventuale VPN.

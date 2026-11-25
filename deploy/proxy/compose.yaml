@@ -1,0 +1,32 @@
+# Proxy principale della VPS: l'unico container con le porte 80/443 e i certificati HTTPS.
+# Ogni app (Argo compresa) ha il suo compose, si collega alla rete `proxy` e non pubblica porte.
+#   cd deploy/proxy && cp .env.example .env && docker compose up -d
+# Nuova app: un file sites/<app>.caddy (non nel repository), poi `docker compose restart caddy`.
+name: proxy
+
+services:
+  caddy:
+    image: caddy:2.11.9-alpine
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL:?imposta ACME_EMAIL}
+      ARGO_DOMAIN: ${ARGO_DOMAIN:?imposta ARGO_DOMAIN}
+      ARGO_AUTH_DOMAIN: ${ARGO_AUTH_DOMAIN:?imposta ARGO_AUTH_DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./sites:/etc/caddy/sites:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks: [proxy]
+    restart: unless-stopped
+
+networks:
+  proxy:
+    name: proxy
+
+volumes:
+  caddy-data:
+  caddy-config:

@@ -1,0 +1,15 @@
+# HTTPS automatico (Let's Encrypt) per tutte le app della VPS.
+{
+	email {$ACME_EMAIL}
+}
+
+# Argo: header di sicurezza, dashboard e blocco di /admin restano nel Caddy di Argo.
+{$ARGO_DOMAIN}, {$ARGO_AUTH_DOMAIN} {
+	reverse_proxy argo:80
+}
+
+# Le altre app, un file ciascuna. Esempio sites/gestionale.caddy:
+#   gestionale.azienda.it {
+#   	reverse_proxy gestionale:8080
+#   }
+import sites/*.caddy

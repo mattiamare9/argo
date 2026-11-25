@@ -1,15 +1,30 @@
 # Deploy
 
 Produzione su una VPS Ubuntu Server LTS con Docker Compose (ADR-011). Requisiti indicativi:
-2 vCPU, 4 GB RAM, 20 GB disco. Il provider non è ancora scelto (decisione aperta).
+2 vCPU, 4 GB RAM, 20 GB disco per Argo. VPS scelta: Aruba, 8 vCPU, 16 GB RAM, 160 GB,
+condivisa con altre app (circa una decina).
 
 ## Architettura in produzione
+
+Sulla VPS c'è un **proxy principale** (`deploy/proxy/`): l'unico container con le porte
+80/443, fa i certificati HTTPS per tutte le app e smista per nome di dominio. Ogni app ha
+il suo compose e si collega alla rete Docker `proxy` senza pubblicare porte. Per una nuova
+app: record DNS verso la VPS, un file `deploy/proxy/sites/<app>.caddy` (fuori dal
+repository), `docker compose restart caddy` in `deploy/proxy`.
+
+```
+Internet :80/:443 → proxy (HTTPS) ─┬─ argo.azienda.it, accesso.azienda.it → caddy di Argo
+                                   └─ altre app, un sottodominio ciascuna
+```
+
+Ogni app sul suo sottodominio, non sotto un percorso (`/argo`): sullo stesso dominio le
+altre app potrebbero leggere i cookie di sessione di Argo.
 
 `deploy/compose.prod.yaml`:
 
 | Servizio | Ruolo | Rete |
 |---|---|---|
-| `caddy` | HTTPS (Let's Encrypt), dashboard statica, proxy verso `api` e `keycloak` | edge (porte 80/443) |
+| `caddy` | Dietro il proxy principale (solo HTTP): header di sicurezza, dashboard statica, proxy verso `api` e `keycloak`, blocco di `/admin` | edge, proxy (alias `argo`) |
 | `api` | FastAPI | edge, backend |
 | `worker` | Job di provisioning; raggiunge i SaaS su Internet | edge, backend |
 | `migrate` | `alembic upgrade head` a ogni avvio, poi termina | backend |
@@ -58,6 +73,10 @@ sudo apt install docker.io docker-compose-v2 git
 git clone git@github.com:mattiamare9/argo.git && cd argo/deploy
 cp .env.prod.example .env.prod        # compila tutti i valori; chmod 600 .env.prod
 ufw allow 22/tcp && ufw allow 80/tcp && ufw allow 443 && ufw enable
+# Aruba: apri 22/80/443 anche nel firewall del pannello.
+
+# proxy principale, una volta per tutta la VPS (crea la rete `proxy`)
+(cd proxy && cp .env.example .env && docker compose up -d)   # compila prima .env
 
 docker compose -f compose.prod.yaml --env-file .env.prod up -d --build
 docker compose -f compose.prod.yaml --env-file .env.prod ps    # tutti healthy / running

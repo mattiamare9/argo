@@ -102,12 +102,20 @@ jobs:
           cp .env.example .env
           docker compose -f compose.yaml --profile idp --profile app config --quiet
           set -a; . ./.env.prod.example; set +a
-          for v in ARGO_DOMAIN ARGO_AUTH_DOMAIN ARGO_ACME_EMAIL POSTGRES_PASSWORD ARGO_APP_DB_PASSWORD \
+          for v in ARGO_DOMAIN ARGO_AUTH_DOMAIN POSTGRES_PASSWORD ARGO_APP_DB_PASSWORD \
                    KEYCLOAK_DB_PASSWORD KC_ADMIN_PASSWORD ARGO_BACKEND_CLIENT_SECRET \
                    ARGO_DASHBOARD_CLIENT_SECRET ARGO_SMTP_HOST; do
             export "$v=${!v:-ci-placeholder}"
           done
           docker compose -f compose.prod.yaml config --quiet
+          (cd proxy && cp .env.example .env && docker compose config --quiet)
+      - name: Caddyfile validi
+        run: |
+          for f in deploy/caddy/Caddyfile deploy/proxy/Caddyfile; do
+            docker run --rm -v "$PWD/$f:/etc/caddy/Caddyfile:ro" \
+              -e ACME_EMAIL=ci@example.com -e ARGO_DOMAIN=argo.example.com -e ARGO_AUTH_DOMAIN=accesso.example.com \
+              caddy:2.11.9-alpine caddy validate --adapter caddyfile --config /etc/caddy/Caddyfile
+          done
       - name: Script shell
         run: shellcheck deploy/*.sh deploy/postgres/*.sh
       - name: Realm Keycloak è JSON valido
