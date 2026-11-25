@@ -69,52 +69,31 @@ ssh-copy-id root@195.231.64.149  # copia la chiave sulla VPS
 ssh root@195.231.64.149          # ora entra senza password
 ```
 
-### 1.4 Un utente di lavoro, non root
+### 1.4 Solo chiave, niente password
 
-Sulla **VPS**, come root:
-
-```bash
-adduser argo                     # scegli una password, il resto Invio
-usermod -aG sudo argo
-mkdir -p /home/argo/.ssh && cp ~/.ssh/authorized_keys /home/argo/.ssh/
-chown -R argo:argo /home/argo/.ssh
-```
-
-Dal tuo PC verifica che funzioni **prima** di chiudere la sessione root:
+Si lavora come `root` (un utente separato nel gruppo `docker` avrebbe comunque gli stessi
+poteri). Quello che conta è che root non sia raggiungibile con una password. Dopo aver
+verificato che `ssh root@195.231.64.149` entra **senza** chiedere la password:
 
 ```bash
-ssh argo@195.231.64.149
+echo 'PasswordAuthentication no' > /etc/ssh/sshd_config.d/no-password.conf
+systemctl restart ssh
 ```
-
-Poi spegni l'accesso con password (sulla VPS, come `argo`):
-
-```bash
-echo 'PasswordAuthentication no' | sudo tee /etc/ssh/sshd_config.d/no-password.conf
-echo 'PermitRootLogin no'        | sudo tee -a /etc/ssh/sshd_config.d/no-password.conf
-sudo systemctl restart ssh
-```
-
-Da qui in poi si entra sempre con `ssh argo@195.231.64.149`.
 
 ---
 
 ## Parte 2 – Preparare il server
 
-Tutto come utente `argo`.
+Tutto come `root`.
 
 ```bash
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y docker.io docker-compose-v2 git
-sudo usermod -aG docker argo     # poi esci e rientra (exit, ssh ...) perché valga
+apt update && apt upgrade -y
+apt install -y docker.io docker-compose-v2 git
 docker run --rm hello-world      # deve stampare "Hello from Docker!"
 ```
 
-Firewall del sistema (in aggiunta a quello di Aruba):
-
-```bash
-sudo ufw allow 22/tcp && sudo ufw allow 80/tcp && sudo ufw allow 443
-sudo ufw enable                  # conferma con y
-```
+Firewall: basta quello del pannello Aruba, con aperte solo 22, 80 e 443 (`ufw` non serve, e
+per le porte pubblicate da Docker verrebbe comunque scavalcato).
 
 ---
 
@@ -127,7 +106,7 @@ cd ~
 git clone https://github.com/mattiamare9/argo.git
 ```
 
-Il codice è ora in `/home/argo/argo`. Il percorso conta: il deploy automatico (Parte 7)
+Il codice è ora in `/root/argo`. Il percorso conta: il deploy automatico (Parte 7)
 entra proprio lì.
 
 Le immagini delle app (già compilate da GitHub) si scaricano più avanti, da sole: anche
@@ -257,7 +236,7 @@ Sul **tuo PC**:
 
 ```bash
 ssh-keygen -t ed25519 -f ~/.ssh/argo_deploy -N "" -C "github-deploy"
-ssh-copy-id -i ~/.ssh/argo_deploy.pub argo@195.231.64.149
+ssh-copy-id -i ~/.ssh/argo_deploy.pub root@195.231.64.149
 ssh-keyscan 195.231.64.149       # copia tutto l'output
 ```
 
@@ -266,24 +245,26 @@ Su GitHub: repository → **Settings → Secrets and variables → Actions**:
 | Tipo | Nome | Valore |
 |---|---|---|
 | Secret | `DEPLOY_HOST` | `195.231.64.149` |
-| Secret | `DEPLOY_USER` | `argo` |
+| Secret | `DEPLOY_USER` | `root` |
 | Secret | `DEPLOY_SSH_KEY` | il contenuto di `~/.ssh/argo_deploy` (il file **senza** `.pub`) |
 | Secret | `DEPLOY_KNOWN_HOSTS` | l'output di `ssh-keyscan` |
 | Variable | `DEPLOY_ENABLED` | `true` |
 
 Poi cancella la chiave privata dal PC (`rm ~/.ssh/argo_deploy`): ora la conserva GitHub.
+È una chiave di root: chi ha i permessi di amministratore sul repository GitHub può, di
+fatto, entrare nel server. Tieni attiva la verifica in due passaggi sul tuo account GitHub.
 
 ---
 
 ## Parte 8 – Backup notturno
 
 ```bash
-sudo mkdir -p /var/backups/argo && sudo chown argo /var/backups/argo
+mkdir -p /var/backups/argo
 crontab -e       # aggiungi la riga sotto
 ```
 
 ```
-30 2 * * * cd /home/argo/argo/deploy && ./backup.sh compose.prod.yaml .env.prod /var/backups/argo >> /var/backups/argo/backup.log 2>&1
+30 2 * * * cd /root/argo/deploy && ./backup.sh compose.prod.yaml .env.prod /var/backups/argo >> /var/backups/argo/backup.log 2>&1
 ```
 
 Ogni notte alle 2:30 un backup cifrato. Va anche copiato **fuori** dalla VPS (passo da
