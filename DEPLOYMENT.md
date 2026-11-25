@@ -1,5 +1,7 @@
 # Deploy
 
+Guida passo passo per la VPS Aruba: `docs/GUIDA_VPS.md`.
+
 Produzione su una VPS Ubuntu Server LTS con Docker Compose (ADR-011). Requisiti indicativi:
 2 vCPU, 4 GB RAM, 20 GB disco per Argo. VPS scelta: Aruba, 8 vCPU, 16 GB RAM, 160 GB,
 condivisa con altre app (circa una decina).
