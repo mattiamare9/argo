@@ -3,7 +3,11 @@
 <html lang="${locale.language}" dir="${(ltr)?then('ltr','rtl')}">
 <head>
 <meta charset="utf-8">
+<#-- Solo chiaro: i client in modalità scura altrimenti scuriscono il fondo e non il testo. -->
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light only">
 <style>
+  :root { color-scheme: light only; }
   body { margin: 0; padding: 0; background: #f6f5f9; }
   .wrap { padding: 32px 16px; font-family: "Hanken Grotesk", "Segoe UI", Arial, sans-serif;
           color: #1d1b26; font-size: 16px; line-height: 1.5; }
@@ -19,9 +23,9 @@
   .foot { max-width: 520px; margin: 16px auto 0; color: #5f5a70; font-size: 13px; }
 </style>
 </head>
-<body>
-<div class="wrap">
-  <div class="card">
+<body style="background:#f6f5f9;">
+<div class="wrap" style="background:#f6f5f9;color:#1d1b26;">
+  <div class="card" style="background:#fdfcff;color:#1d1b26;">
     <p class="brand"><span class="tile">A</span>Argo</p>
     <#nested>
   </div>
