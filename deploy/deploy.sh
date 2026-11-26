@@ -6,6 +6,8 @@ set -euo pipefail
 cd "$(dirname "$0")"
 TAG=${1:?tag immagine}
 export ARGO_IMAGE_TAG=$TAG
+ARGO_KC_THEME=$(git rev-parse HEAD:deploy/keycloak/themes)
+export ARGO_KC_THEME
 dc() { docker compose -f compose.prod.yaml --env-file .env.prod "$@"; }
 
 dc pull --quiet api worker migrate caddy

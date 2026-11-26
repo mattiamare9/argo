@@ -112,6 +112,10 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:26.8.2
     command: ["start", "--import-realm"]
+    # Keycloak tiene i temi in memoria: quando cambiano (hash da deploy.sh) l'etichetta
+    # cambia e `up -d` ricrea il container, così il nuovo tema si vede senza comandi a mano.
+    labels:
+      argo.theme: ${ARGO_KC_THEME:-}
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak_db
