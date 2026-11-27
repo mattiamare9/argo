@@ -3,7 +3,7 @@ name: argo
 
 services:
   postgres:
-    image: postgres:17.7-alpine
+    image: postgres:19.0-alpine
     profiles: [db, app, idp]
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-argo}

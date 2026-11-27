@@ -38,7 +38,7 @@ services:
     restart: unless-stopped
 
   postgres:
-    image: postgres:17.7-alpine
+    image: postgres:19.0-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER:?}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
@@ -111,7 +111,7 @@ services:
     restart: unless-stopped
 
   keycloak-db:
-    image: postgres:17.7-alpine
+    image: postgres:19.0-alpine
     environment:
       POSTGRES_USER: keycloak
       POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?}
