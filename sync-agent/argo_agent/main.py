@@ -6,7 +6,7 @@ from collections.abc import Callable
 from .client import ArgoClient, SendError
 from .config import ConfigError, load_config
 from .models import SourceError, SourceReader
-from .sources import ExcelSource
+from .sources import EduplanSource, ExcelSource
 from .state import State, StateStore, snapshot_hash
 
 log = logging.getLogger("argo_agent")
@@ -64,7 +64,7 @@ def main(argv: list[str] | None = None) -> int:
     except ConfigError as exc:
         log.error("%s", exc)
         return 2
-    source = ExcelSource(cfg)
+    source = EduplanSource(cfg) if cfg.source == "eduplan" else ExcelSource(cfg)
     client = ArgoClient(cfg.api_url, cfg.api_key, cfg.source_name)
     store = StateStore(cfg.state_dir)
     while True:

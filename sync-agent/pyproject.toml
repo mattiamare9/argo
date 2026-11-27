@@ -16,7 +16,7 @@ target-version = "py312"
 select = ["E", "F", "I", "B", "UP", "S"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101"]
+"tests/*" = ["S101", "S105", "S106", "S107"]  # assert e password finte nei test
 
 [dependency-groups]
 dev = [

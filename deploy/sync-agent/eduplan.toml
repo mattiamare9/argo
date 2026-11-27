@@ -1,0 +1,12 @@
+# Sync Agent sulla VPS con fonte EduPLANWeb (deploy/compose.prod.yaml, servizio sync-agent).
+# Chiave API e credenziali del gestionale NON qui: ARGO_AGENT_API_KEY, EDUPLAN_USERNAME,
+# EDUPLAN_PASSWORD in .env.prod.
+source = "eduplan"
+source_name = "eduplan"
+api_url = "http://api:8000"   # rete interna, non passa da Internet
+eduplan_url = "https://safetia.eplanweb.it"
+eduplan_tenant_id = 1
+
+poll_seconds = 900            # legge ogni 15 minuti; invia solo se qualcosa è cambiato
+heartbeat_seconds = 3600      # ...e comunque ogni ora, come segnale di vita
+state_dir = "/var/lib/argo-agent"

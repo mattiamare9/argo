@@ -7,7 +7,7 @@ MAX_RECORDS = 1000
 # agreed rules" is undefined, so nothing is implemented for it yet.
 
 
-def _valid_email(email: str) -> bool:
+def valid_email(email: str) -> bool:
     local, sep, domain = email.partition("@")
     return bool(sep and local and "@" not in domain and "." in domain.strip("."))
 
@@ -31,7 +31,7 @@ def build_records(
         for name in FIELDS:
             if not row[name]:
                 raise SourceError(f"Riga {number}: campo obbligatorio vuoto ({name})")
-        if not _valid_email(row["email"]):
+        if not valid_email(row["email"]):
             raise SourceError(f"Riga {number}: email non valida ({row['email']})")
         raw_status = row["status"].lower()
         if raw_status in active:

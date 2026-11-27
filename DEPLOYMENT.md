@@ -33,6 +33,7 @@ altre app potrebbero leggere i cookie di sessione di Argo.
 | `postgres` | `iam_db`; API e worker usano il ruolo `argo_app`, le migrazioni il proprietario | backend (interna) |
 | `keycloak` | Identity provider (`start`, dietro proxy) | edge, backend, idp |
 | `keycloak-db` | `keycloak_db`, separato (specifica §3.5) | idp (interna) |
+| `sync-agent` | Solo con `COMPOSE_PROFILES=eduplan`: legge i dipendenti da EduPLANWeb ogni 15 minuti e li invia all'API interna | edge |
 
 Due nomi DNS puntano alla VPS:
 
@@ -45,7 +46,7 @@ Due nomi DNS puntano alla VPS:
 | Workflow | Quando | Cosa fa |
 |---|---|---|
 | `ci.yml` | ogni push e PR | backend (lint, migrazioni: una sola head, upgrade, `alembic check`, downgrade/upgrade, test su PostgreSQL), sync-agent, frontend (lint, prettier, build), compose e script (`shellcheck`), sicurezza (gitleaks, pip-audit, npm audit, Trivy config) |
-| `images.yml` | push su `main`, tag `v*` | immagini `argo-backend` e `argo-caddy` per **amd64 e arm64** (Oracle Ampere) su GHCR, tag = SHA del commit + `main` + versione; scansione Trivy delle immagini; poi deploy |
+| `images.yml` | push su `main`, tag `v*` | immagini `argo-backend`, `argo-caddy` e `argo-sync-agent` per **amd64 e arm64** (Oracle Ampere) su GHCR, tag = SHA del commit + `main` + versione; scansione Trivy delle immagini; poi deploy |
 | Dependabot | ogni lunedì | una PR raggruppata per Python, npm, Actions, Docker |
 
 `make ci` esegue in locale le stesse verifiche di `ci.yml`.

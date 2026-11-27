@@ -93,6 +93,23 @@ services:
         condition: service_completed_successfully
     restart: unless-stopped
 
+  # Legge i dipendenti da EduPLANWeb (gestionale web) e li invia all'API sulla rete interna.
+  # Parte solo con COMPOSE_PROFILES=eduplan in .env.prod (insieme alle sue credenziali).
+  sync-agent:
+    image: ghcr.io/mattiamare9/argo-sync-agent:${ARGO_IMAGE_TAG:-main}
+    build: ../sync-agent
+    profiles: [eduplan]
+    environment:
+      ARGO_AGENT_API_KEY: ${ARGO_AGENT_API_KEY:-}
+      EDUPLAN_USERNAME: ${EDUPLAN_USERNAME:-}
+      EDUPLAN_PASSWORD: ${EDUPLAN_PASSWORD:-}
+    volumes:
+      - ./sync-agent/eduplan.toml:/etc/argo-agent/agent.toml:ro
+      - sync-agent-state:/var/lib/argo-agent
+    networks: [edge]  # API interna e EduPLANWeb su Internet
+    depends_on: [api]
+    restart: unless-stopped
+
   keycloak-db:
     image: postgres:17.7-alpine
     environment:
@@ -172,3 +189,4 @@ volumes:
   caddy-config:
   postgres-data:
   keycloak-db-data:
+  sync-agent-state:

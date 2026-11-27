@@ -10,7 +10,7 @@ ARGO_KC_THEME=$(git rev-parse HEAD:deploy/keycloak/themes)
 export ARGO_KC_THEME
 dc() { docker compose -f compose.prod.yaml --env-file .env.prod "$@"; }
 
-dc pull --quiet api worker migrate caddy
+dc pull --quiet  # tutti i servizi attivi, compreso sync-agent se abilitato
 dc up -d --no-build --remove-orphans
 for _ in $(seq 1 60); do
   if dc exec -T api python -c "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/api/health')" 2>/dev/null; then

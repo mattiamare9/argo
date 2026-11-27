@@ -32,6 +32,9 @@ jobs:
           - name: argo-caddy
             context: .
             dockerfile: deploy/caddy/Dockerfile
+          - name: argo-sync-agent
+            context: sync-agent
+            dockerfile: sync-agent/Dockerfile
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: docker/setup-qemu-action@v4.4.0

@@ -75,6 +75,22 @@ Un wrapper come servizio Windows è una decisione rimandata.
 - Regole: nessun campo vuoto, `employee_id` ed `email` unici (senza distinzione maiuscole),
   email valida, al massimo 1000 dipendenti.
 
+## Fonte EduPLANWeb (gestionale web)
+
+Con `source = "eduplan"` l'agent non legge un file: entra in EduPLANWeb con un account di sola
+lettura e legge gli utenti dallo stesso endpoint JSON che riempie la tabella
+Configurazione → Users (`ReadUsers`, anche i disattivati). Gira sulla VPS come container
+(`deploy/sync-agent/eduplan.toml`, servizio `sync-agent` in `deploy/compose.prod.yaml`).
+Credenziali solo dall'ambiente: `EDUPLAN_USERNAME`, `EDUPLAN_PASSWORD`.
+
+- `employee_id` = `Id` di EduPLANWeb (numerico, non cambia mai); stato = campo `Attivo`.
+- Account **esclusi** e scritti nel log (`docker compose logs sync-agent`), invece di bloccare
+  tutto: campi vuoti (es. account "DA ASSEGNARE" senza cognome), email non valida, email
+  usata da più account. Se tra gli account con la stessa email uno solo è attivo, vale
+  quello (account rifatto). Un account escluso non viene mai disattivato.
+- Non è un'API ufficiale: se EduPLANWeb cambia, la lettura fallisce, la dashboard mostra la
+  sincronizzazione sospesa e nessuno viene disattivato.
+
 ## Test
 
 ```bash

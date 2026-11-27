@@ -215,15 +215,33 @@ docker compose -f compose.prod.yaml --env-file .env.prod exec api \
 
 Arriva un'email "Attiva il tuo accesso ad Argo": dal link si crea la passkey.
 
-### 6.4 La chiave per il Sync Agent
+### 6.4 Lettura dei dipendenti da EduPLANWeb
+
+Il Sync Agent gira sulla VPS come container di Argo e legge gli utenti da EduPLANWeb ogni
+15 minuti. Crea la sua chiave (compare **una volta sola**):
 
 ```bash
 docker compose -f compose.prod.yaml --env-file .env.prod exec api \
-  python -m app.cli create-agent --name excel-hr
+  python -m app.cli create-agent --name eduplan
 ```
 
-La chiave compare **una volta sola**: copiala subito. Serve al programma che legge l'elenco
-dei dipendenti in azienda (`sync-agent/README.md`, con `api_url = "https://argo.azienda.it"`).
+Aggiungi in fondo a `.env.prod` (con `nano .env.prod`):
+
+```
+COMPOSE_PROFILES=eduplan
+ARGO_AGENT_API_KEY=<la chiave appena creata>
+EDUPLAN_USERNAME=<utente di sola lettura di EduPLANWeb>
+EDUPLAN_PASSWORD=<la sua password>
+```
+
+Poi `./deploy.sh main` e controlla:
+
+```bash
+docker compose -f compose.prod.yaml --env-file .env.prod logs sync-agent --tail 30
+```
+
+Deve comparire `Snapshot inviato: N dipendenti`. Le righe `escluso` sono gli account che
+Argo non può usare (senza cognome, email ripetuta…): sono da sistemare in EduPLANWeb.
 
 ---
 
